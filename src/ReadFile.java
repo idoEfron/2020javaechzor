@@ -39,6 +39,5 @@ public class ReadFile {
         }
         System.out.println(counter);
         System.out.println(allFile.size()-1815);
-
     }
 }
