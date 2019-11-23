@@ -27,21 +27,22 @@ public class Parser {
 
     public void parseDocs (ArrayList<String> docList) {
         for (int i=0;i<docList.size();i++) {
-            if(!docList.get(i).equals("\n")&&!docList.get(i).equals("\n\n\n")&&!docList.get(i).equals("\n\n\n\n")&&!docList.get(i).equals("\n\n")){
+            if(!docList.get(i).equals("\n")&&!docList.get(i).equals("\n\n\n")&&!docList.get(i).equals("\n\n\n\n")&&!docList.get(i).equals("\n\n")) {
                 String docId = docList.get(i);
-                String result = docId.substring(docId.indexOf("<DOCNO>")+8 , docId.indexOf("</DOCNO>")-1);
-                String txt =  docId.substring(docId.indexOf("<TEXT>")+7 , docId.indexOf("</TEXT>"));
-                String[] tokens = txt.split("\\s+|\n");
-                System.out.println("");
-                ArrayList <String> afterCleaning = new ArrayList<>();
-                for(int y=0;y<tokens.length;y++){
-                    String token = tokens[y];
-                if(checkChar(token.charAt(0))==false) {
-                    token = token.substring(1,token.length());
-                }
-                if(token.length()>0&&checkChar(token.charAt(token.length()-1))==false){
-                    token = token.substring(0,token.length()-1);
-                }
+                String result = docId.substring(docId.indexOf("<DOCNO>") + 8, docId.indexOf("</DOCNO>") - 1);
+                if (docId.contains("<TEXT>")&&docId.contains("</TEXT>")) {
+                    String txt = docId.substring(docId.indexOf("<TEXT>") + 7, docId.indexOf("</TEXT>"));
+                    String[] tokens = txt.split("\\s+|\n");
+                    ArrayList<String> afterCleaning = new ArrayList<>();
+                    for (int y = 0; y < tokens.length; y++) {
+                        String token = tokens[y];
+                        if (token.length() > 0 && checkChar(token.charAt(0)) == false) {
+                            token = token.substring(1, token.length());
+                        }
+                        if (token.length() > 0 && checkChar(token.charAt(token.length() - 1)) == false) {
+                            token = token.substring(0, token.length() - 1);
+                        }
+                    }
                 }
             }
         }
