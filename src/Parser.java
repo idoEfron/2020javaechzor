@@ -39,13 +39,9 @@ public class Parser {
                 if(checkChar(token.charAt(0))==false) {
                     token = token.substring(1,token.length());
                 }
-                if(token.equals("Pyongyang")==true){
-                    System.out.println("fuck");
-                }
-                if(checkChar(token.charAt(token.length()-1))==false){
+                if(token.length()>0&&checkChar(token.charAt(token.length()-1))==false){
                     token = token.substring(0,token.length()-1);
                 }
-                    System.out.println(token);
                 }
             }
         }
