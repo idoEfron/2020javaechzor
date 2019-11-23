@@ -33,15 +33,15 @@ public class Parser {
                 String result = docId.substring(docId.indexOf("<DOCNO>")+8 , docId.indexOf("</DOCNO>")-1);
                 String txt =  docId.substring(docId.indexOf("<TEXT>")+7 , docId.indexOf("</TEXT>"));
                 String[] tokens = txt.split("\\s+|\n");
-                System.out.println("");
                 ArrayList <String> afterCleaning = new ArrayList<>();
+
+
                 for(int y=0;y<tokens.length;y++){
                     String token = tokens[y];
-                if(checkChar(token.charAt(0))==false) {
+                if(token.length()>0&&checkChar(token.charAt(0))==false) {
                     token = token.substring(1,token.length());
                 }
-
-                if(checkChar(token.charAt(token.length()-1))==false){
+                if(token.length()>0&&checkChar(token.charAt(token.length()-1))==false){
                     token = token.substring(0,token.length()-1);
                 }
                 }
@@ -60,6 +60,7 @@ public class Parser {
             if(str.matches("^[0-9]*\\.?[0-9]*$")) { //https://stackoverflow.com/questions/21923361/how-to-check-a-string-contains-only-digits-and-one-occurrence-of-a-decimal-point
                 str= str.replaceFirst(",",".");
                 str = str.substring(str.indexOf('.'),str.indexOf('.')+3);
+                str= str+"K";
                 if(termMap.containsKey(str)){
                     termMap.get(str).add(docID);
                 }
@@ -73,5 +74,7 @@ public class Parser {
 
         return false;
     }
+
+
 
 }
