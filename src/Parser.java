@@ -33,8 +33,25 @@ public class Parser {
                 String result = docId.substring(docId.indexOf("<DOCNO>")+8 , docId.indexOf("</DOCNO>")-1);
                 String txt =  docId.substring(docId.indexOf("<TEXT>")+7 , docId.indexOf("</TEXT>"));
                 String[] tokens = txt.split("\\s+|\n");
+                System.out.println("");
+                ArrayList <String> afterCleaning = new ArrayList<>();
+                for(int y=0;y<tokens.length;y++){
+                    String token = tokens[y];
+                if(checkChar(token.charAt(0))==false) {
+                    token = token.substring(1,token.length());
+                }
+
+                if(checkChar(token.charAt(token.length()-1))==false){
+                    token = token.substring(0,token.length()-1);
+                }
+                }
             }
         }
+    }
+
+    private boolean checkChar(char charAt) {
+        return ((charAt >= 65 && charAt <= 90) || (charAt >= 97 && charAt <= 122)||(charAt >= 48 && charAt <= 57));
+
     }
 
 
