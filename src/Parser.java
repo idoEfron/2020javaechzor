@@ -15,4 +15,10 @@ public class Parser {
 
     }
 
+
+    private boolean isNumber(String str){
+
+        return false;
+    }
+
 }
