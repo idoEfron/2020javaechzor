@@ -7,6 +7,10 @@ public class main {
         Parser p = new Parser(read);
 
         //tests for isNumber
+        System.out.println(p.isNumber("10thousand","shaull"));
+        System.out.println(p.isNumber("102.32","shaull"));
         System.out.println(p.isNumber("10,123","shaull"));
+        System.out.println(p.isNumber("10,123,356,000","shaull"));
+
     }
     }
