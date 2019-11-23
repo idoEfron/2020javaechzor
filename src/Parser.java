@@ -47,7 +47,7 @@ public class Parser {
             }
         }
     }
-
+//
     private boolean checkChar(char charAt) {
         return ((charAt >= 65 && charAt <= 90) || (charAt >= 97 && charAt <= 122)||(charAt >= 48 && charAt <= 57));
 
