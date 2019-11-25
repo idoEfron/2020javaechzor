@@ -2,6 +2,7 @@ import java.util.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.regex.Pattern;
 
 public class Parser {
 
@@ -62,6 +63,7 @@ public class Parser {
         return token;
     }
 
+
     /**
      * this function check if the char is a comma
      *
@@ -72,4 +74,29 @@ public class Parser {
         return ((charAt >= 65 && charAt <= 90) || (charAt >= 97 && charAt <= 122) || (charAt >= 48 && charAt <= 57) || charAt == '$' || charAt == '%');
 
     }
+
+
+    public boolean isNumber(String str,String next,String docID){
+        if(Character.isDigit(str.charAt(0))){
+            Pattern pattern = Pattern.compile("\\d+(,\\d+)*(\\.\\d+)?");
+            if(str.matches("\\d+(,\\d+)*(\\.\\d+)?")) {
+                str= str.replaceFirst(",",".");
+                str = str.substring(str.indexOf('.'),str.indexOf('.')+3);
+                str= str+"K";
+                if(termMap.containsKey(str)){
+                    termMap.get(str).add(docID);
+                }
+                else{
+                    termMap.put(str,new ArrayList<String>());
+                    termMap.get(str).add(docID);
+                }
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
 }
