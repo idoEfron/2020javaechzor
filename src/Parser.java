@@ -1,3 +1,5 @@
+import javafx.scene.layout.Pane;
+
 import java.util.*;
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +14,20 @@ public class Parser {
     public Parser(ReadFile read) throws IOException {
         termMap = new HashMap<>();
         stopwords = new HashSet<String>();
-
+        Map<String,String> months= new HashMap<String, String>(){{
+            put("January","01"); put("JANUARY","01");
+            put("February","02"); put("FEBRUARY","02");
+            put("March","03"); put("MARCH","03");
+            put("April","04"); put("APRIL","04");
+            put("May","05"); put("MAY","05");
+            put("June","06"); put("JUNE","06");
+            put("July","07"); put("JULY","07");
+            put("August","08"); put("AUGUST","08");
+            put("September","09"); put("SEPTEMBER","09");
+            put("October","10"); put("OCTOBER","10");
+            put("November","11"); put("NOVEMBER","11");
+            put("December","12"); put("DECEMBER","12");
+        }};
 
         ///add stopwords to hashset
         /*
@@ -31,6 +46,7 @@ public class Parser {
 
     /**
      * this function is responsibly is to split the documents to tokens
+     *
      * @param docList
      */
     public void parseDocs(ArrayList<String> docList) {
@@ -56,7 +72,7 @@ public class Parser {
                                     }
                                 }
                             }
-                        }else{
+                        } else {
                             token = cleanToken(tokens[y]);
                             if (token.length() > 0) {
                                 afterCleaning.add(token);
@@ -101,95 +117,117 @@ public class Parser {
     }
 
     // *************change public to private**********8
-    public boolean isNumber(String str,String docID){
-        if(Character.isDigit(str.charAt(0))){
+    public boolean isNumber(String str, String docID) {
+        if (Character.isDigit(str.charAt(0))) {
             Pattern pattern = Pattern.compile("\\d+(,\\d+)*(\\.\\d+)?");
-            if(str.matches("\\d+(,\\d+)*(\\.\\d+)?")) {
-                int counter =0;
-                for(int i = 0; i<str.length(); i ++) {
+            if (str.matches("\\d+(,\\d+)*(\\.\\d+)?")) {
+                int counter = 0;
+                for (int i = 0; i < str.length(); i++) {
                     char theChar = str.charAt(i);
-                    if(Character.compare(theChar,',') == 0){
+                    if (Character.compare(theChar, ',') == 0) {
                         counter++;
                     }
                 }
-                if (counter >0){
+                if (counter > 0) {
 
                     boolean dot = false;
-                    for(int i = str.indexOf(',')+3;i> str.indexOf(','); i--){
+                    for (int i = str.indexOf(',') + 3; i > str.indexOf(','); i--) {
                         char theChar = str.charAt(i);
                         int num = Integer.parseInt(String.valueOf(theChar));
-                        if(num >0){
+                        if (num > 0) {
                             dot = true;
+                        } else {
+                            if (dot == false)
+                                str = str.substring(0, i);
                         }
-                        else{
-                            if(dot == false)
-                               str = str.substring(0,i);
-                        }
                     }
-                    if(dot == true){
-                        str= str.replaceFirst(",",".");
+                    if (dot == true) {
+                        str = str.replaceFirst(",", ".");
+                    } else {
+                        str = str.replaceFirst(",", "");
                     }
-                    else{
-                        str= str.replaceFirst(",","");
-                    }
-                    switch(counter){
+                    switch (counter) {
                         case 1:
-                            str = str+"K";
+                            str = str + "K";
                             break;
                         case 2:
-                            str = str+"M";
+                            str = str + "M";
                             break;
                         case 3:
-                            str = str+"B";
+                            str = str + "B";
                             break;
                         default:
                             break;
                     }
                 }
-                if(termMap.containsKey(str)){
+                if (termMap.containsKey(str)) {
                     termMap.get(str).add(docID);
-                }
-                else{
-                    termMap.put(str,new ArrayList<String>());
+                } else {
+                    termMap.put(str, new ArrayList<String>());
                     termMap.get(str).add(docID);
                 }
                 return true;
             }
         }
+
         return false;
     }
 
-    public boolean defineCase(ArrayList<String> tokens, int index, String docID){
-        String before ="";
-        String current=tokens.get(index);;
-        String after="";
-        if(index >0){
-            before = tokens.get(index-1);
+
+    public boolean defineCase(ArrayList<String> tokens, int index, String docID) {
+        String before = "";
+        String current = tokens.get(index);
+        ;
+        String after = "";
+
+        if (index > 0) {
+            before = tokens.get(index - 1);
         }
-        if(index<tokens.size()){
-            after = tokens.get(index+1);
+        if (index < tokens.size()) {
+            after = tokens.get(index + 1);
         }
 
         // checks number cases
-        if(after.equals("Thousand")){
-            tokens.remove(index+1);
-            if(termMap.containsKey(current+"K")){
-                termMap.get(current).add(docID);
+
+        if (isNumber(current, docID)) {
+            if (after.equals("Thousand")) {
+                tokens.remove(index + 1);
+                if (termMap.containsKey(current + "K")) {
+                    termMap.get(current).add(docID);
+                } else {
+                    termMap.put(current + "K", new ArrayList<String>());
+                    termMap.get(current + "K").add(docID);
+                }
+                return true;
             }
-            else{
-                termMap.put(current+"K",new ArrayList<String>());
-                termMap.get(current+"K").add(docID);
+
+            if (after.equals("Million")) {
+                tokens.remove(index + 1);
+                if (termMap.containsKey(current + "M")) {
+                    termMap.get(current).add(docID);
+                } else {
+                    termMap.put(current + "M", new ArrayList<String>());
+                    termMap.get(current + "M").add(docID);
+                }
             }
-            return true;
-        }
-        if(after.equals("Million")){
-            tokens.remove(index+1);
-            if(termMap.containsKey(current+"M")){
-                termMap.get(current).add(docID);
+
+            if (after.equals("Billion")) {
+                tokens.remove(index + 1);
+                if (termMap.containsKey(current + "B")) {
+                    termMap.get(current).add(docID);
+                } else {
+                    termMap.put(current + "B", new ArrayList<String>());
+                    termMap.get(current + "B").add(docID);
+                }
             }
-            else{
-                termMap.put(current+"M",new ArrayList<String>());
-                termMap.get(current+"M").add(docID);
+            if (after.equals("percent") || after.equals("percentage")) {
+                tokens.remove(index + 1);
+                if (termMap.containsKey(current + "%")) {
+                    termMap.get(current).add(docID);
+                } else {
+                    termMap.put(current + "%", new ArrayList<String>());
+                    termMap.get(current + "%").add(docID);
+                }
             }
         }
 
