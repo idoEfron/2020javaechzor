@@ -37,11 +37,28 @@ public class Parser {
                     String[] tokens = txt.split("\\s+|\n");
                     ArrayList<String> afterCleaning = new ArrayList<>();
                     for (int y = 0; y < tokens.length; y++) {
-                        String token = cleanToken(tokens[y]);
-                        if (token.length() > 0) {
-                            afterCleaning.add(token);
+                        String currToken = tokens[y];
+                        String token = "";
+                        if (currToken.contains("/")) {
+                            if (Character.isDigit(currToken.charAt(0)) == false || Character.isDigit(currToken.charAt(currToken.length() - 1)) == false) {
+                                {
+                                    String[] afterRemoving = currToken.split("/");
+                                    for (int j = 0; j < afterRemoving.length; j++) {
+                                        token = cleanToken(afterRemoving[j]);
+                                        if (token.length() > 0) {
+                                            afterCleaning.add(token);
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            token = cleanToken(tokens[y]);
+                            if (token.length() > 0) {
+                                afterCleaning.add(token);
+                            }
                         }
                     }
+                    System.out.println("");
                 }
             }
         }
@@ -53,12 +70,15 @@ public class Parser {
      * @param token
      * @return
      */
-    private String cleanToken(String token) {
+    protected String cleanToken(String token) {
         if (token.length() > 0 && checkChar(token.charAt(0)) == false) {
             token = token.substring(1, token.length());
         }
         if (token.length() > 0 && checkChar(token.charAt(token.length() - 1)) == false) {
             token = token.substring(0, token.length() - 1);
+        }
+        if (token.length() > 0 && (checkChar(token.charAt(0)) == false || checkChar(token.charAt(token.length() - 1)) == false)) {
+            token = cleanToken(token);
         }
         return token;
     }
@@ -76,18 +96,17 @@ public class Parser {
     }
 
 
-    public boolean isNumber(String str,String next,String docID){
-        if(Character.isDigit(str.charAt(0))){
+    public boolean isNumber(String str, String docID) {
+        if (Character.isDigit(str.charAt(0))) {
             Pattern pattern = Pattern.compile("\\d+(,\\d+)*(\\.\\d+)?");
-            if(str.matches("\\d+(,\\d+)*(\\.\\d+)?")) {
-                str= str.replaceFirst(",",".");
-                str = str.substring(str.indexOf('.'),str.indexOf('.')+3);
-                str= str+"K";
-                if(termMap.containsKey(str)){
+            if (str.matches("\\d+(,\\d+)*(\\.\\d+)?")) {
+                str = str.replaceFirst(",", ".");
+                str = str.substring(str.indexOf('.'), str.indexOf('.') + 3);
+                str = str + "K";
+                if (termMap.containsKey(str)) {
                     termMap.get(str).add(docID);
-                }
-                else{
-                    termMap.put(str,new ArrayList<String>());
+                } else {
+                    termMap.put(str, new ArrayList<String>());
                     termMap.get(str).add(docID);
                 }
                 return true;
@@ -96,7 +115,6 @@ public class Parser {
 
         return false;
     }
-
 
 
 }

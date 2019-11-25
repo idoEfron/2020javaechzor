@@ -7,8 +7,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+
 public class ReadFile {
-    protected ArrayList<String>allFile;
+    protected ArrayList<String> allFile;
 
     public ReadFile() throws IOException {
         allFile = new ArrayList<>();
