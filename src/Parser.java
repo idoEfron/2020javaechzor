@@ -1,3 +1,5 @@
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.*;
 import java.io.File;
 import java.io.IOException;
@@ -101,7 +103,7 @@ public class Parser {
     }
 
     // *************change public to private**********8
-    public boolean isNumber(String str,String docID){
+    public boolean isNumber(String str,String docID) throws ParseException {
         if(Character.isDigit(str.charAt(0))){
             Pattern pattern = Pattern.compile("\\d+(,\\d+)*(\\.\\d+)?");
             if(str.matches("\\d+(,\\d+)*(\\.\\d+)?")) {
@@ -112,9 +114,16 @@ public class Parser {
                         counter++;
                     }
                 }
+
+                // handle case of number without additional word (such as thousand, million and etc..)
                 if (counter >0){
 
-                    boolean dot = false;
+                    NumberFormat format = NumberFormat.getInstance(Locale.FRANCE);
+                    Number number = format.parse(str);
+                    double d = number.doubleValue();
+                    str = Double.toString(d);
+
+                    /*boolean dot = false;
                     for(int i = str.indexOf(',')+3;i> str.indexOf(','); i--){
                         char theChar = str.charAt(i);
                         int num = Integer.parseInt(String.valueOf(theChar));
@@ -133,7 +142,7 @@ public class Parser {
                     }
                     else{
                         str= str.replaceFirst(",","");
-                    }
+                    }*/
 
                     switch(counter){
                         case 1:
@@ -148,16 +157,18 @@ public class Parser {
                         default:
                             break;
                     }
+
+                    if(termMap.containsKey(str)){
+                        termMap.get(str).add(docID);
+                    }
+                    else{
+                        termMap.put(str,new ArrayList<String>());
+                        termMap.get(str).add(docID);
+                    }
                 }
 
 
-                if(termMap.containsKey(str)){
-                    termMap.get(str).add(docID);
-                }
-                else{
-                    termMap.put(str,new ArrayList<String>());
-                    termMap.get(str).add(docID);
-                }
+
                 return true;
             }
         }
@@ -166,7 +177,7 @@ public class Parser {
     }
 
 
-    public boolean defineCase(ArrayList<String> tokens, int index, String docID){
+    public boolean defineCase(ArrayList<String> tokens, int index, String docID) throws ParseException {
         String before ="";
         String current=tokens.get(index);;
         String after="";
@@ -193,7 +204,7 @@ public class Parser {
                 return true;
             }
 
-            if(after.equals("Million")){
+            else if(after.equals("Million")){
                 tokens.remove(index+1);
                 if(termMap.containsKey(current+"M")){
                     termMap.get(current).add(docID);
@@ -204,7 +215,7 @@ public class Parser {
                 }
             }
 
-            if(after.equals("Billion")){
+            else if(after.equals("Billion")){
                 tokens.remove(index+1);
                 if(termMap.containsKey(current+"B")){
                     termMap.get(current).add(docID);
