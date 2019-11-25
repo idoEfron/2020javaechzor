@@ -14,7 +14,7 @@ public class Parser {
         stopwords = new HashSet<String>();
 
 
-        //add stopwords to hashset
+        ///add stopwords to hashset
         /*
         this part of the code is from https://howtodoinjava.com/java/io/read-file-from-resources-folder/
          */
