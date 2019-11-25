@@ -2,6 +2,7 @@ import java.util.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+
 public class Parser {
 
     private Map<String, ArrayList<String>> termMap;
@@ -25,31 +26,50 @@ public class Parser {
         parseDocs(read.allFile);
     }
 
-    public void parseDocs (ArrayList<String> docList) {
-        for (int i=0;i<docList.size();i++) {
-            if(!docList.get(i).equals("\n")&&!docList.get(i).equals("\n\n\n")&&!docList.get(i).equals("\n\n\n\n")&&!docList.get(i).equals("\n\n")) {
+    public void parseDocs(ArrayList<String> docList) {
+        for (int i = 0; i < docList.size(); i++) {
+            if (!docList.get(i).equals("\n") && !docList.get(i).equals("\n\n\n") && !docList.get(i).equals("\n\n\n\n") && !docList.get(i).equals("\n\n")) {
                 String docId = docList.get(i);
                 String result = docId.substring(docId.indexOf("<DOCNO>") + 8, docId.indexOf("</DOCNO>") - 1);
-                if (docId.contains("<TEXT>")&&docId.contains("</TEXT>")) {
+                if (docId.contains("<TEXT>") && docId.contains("</TEXT>")) {
                     String txt = docId.substring(docId.indexOf("<TEXT>") + 7, docId.indexOf("</TEXT>"));
                     String[] tokens = txt.split("\\s+|\n");
                     ArrayList<String> afterCleaning = new ArrayList<>();
                     for (int y = 0; y < tokens.length; y++) {
-                        String token = tokens[y];
-                        if (token.length() > 0 && checkChar(token.charAt(0)) == false) {
-                            token = token.substring(1, token.length());
-                        }
-                        if (token.length() > 0 && checkChar(token.charAt(token.length() - 1)) == false) {
-                            token = token.substring(0, token.length() - 1);
+                        String token = cleanToken(tokens[y]);
+                        if (token.length() > 0) {
+                            afterCleaning.add(token);
                         }
                     }
                 }
             }
         }
     }
-//
+
+    /**
+     * this function is cleaning the token
+     *
+     * @param token
+     * @return
+     */
+    private String cleanToken(String token) {
+        if (token.length() > 0 && checkChar(token.charAt(0)) == false) {
+            token = token.substring(1, token.length());
+        }
+        if (token.length() > 0 && checkChar(token.charAt(token.length() - 1)) == false) {
+            token = token.substring(0, token.length() - 1);
+        }
+        return token;
+    }
+
+    /**
+     * this function check if the char is a comma
+     *
+     * @param charAt
+     * @return
+     */
     private boolean checkChar(char charAt) {
-        return ((charAt >= 65 && charAt <= 90) || (charAt >= 97 && charAt <= 122)||(charAt >= 48 && charAt <= 57));
+        return ((charAt >= 65 && charAt <= 90) || (charAt >= 97 && charAt <= 122) || (charAt >= 48 && charAt <= 57) || charAt == '$' || charAt == '%');
 
     }
 }
