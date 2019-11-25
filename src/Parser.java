@@ -120,13 +120,11 @@ public class Parser {
                         int num = Integer.parseInt(String.valueOf(theChar));
                         if(num >0){
                             dot = true;
-
                         }
                         else{
                             if(dot == false)
                                str = str.substring(0,i);
                         }
-
                     }
                     if(dot == true){
                         str= str.replaceFirst(",",".");
@@ -134,7 +132,6 @@ public class Parser {
                     else{
                         str= str.replaceFirst(",","");
                     }
-
                     switch(counter){
                         case 1:
                             str = str+"K";
@@ -149,8 +146,6 @@ public class Parser {
                             break;
                     }
                 }
-
-
                 if(termMap.containsKey(str)){
                     termMap.get(str).add(docID);
                 }
@@ -161,16 +156,13 @@ public class Parser {
                 return true;
             }
         }
-
         return false;
     }
-
 
     public boolean defineCase(ArrayList<String> tokens, int index, String docID){
         String before ="";
         String current=tokens.get(index);;
         String after="";
-
         if(index >0){
             before = tokens.get(index-1);
         }
@@ -179,7 +171,6 @@ public class Parser {
         }
 
         // checks number cases
-
         if(after.equals("Thousand")){
             tokens.remove(index+1);
             if(termMap.containsKey(current+"K")){
@@ -191,7 +182,6 @@ public class Parser {
             }
             return true;
         }
-
         if(after.equals("Million")){
             tokens.remove(index+1);
             if(termMap.containsKey(current+"M")){
