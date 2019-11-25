@@ -180,31 +180,45 @@ public class Parser {
 
         // checks number cases
 
-        if(after.equals("Thousand")){
-            tokens.remove(index+1);
-            if(termMap.containsKey(current+"K")){
-                termMap.get(current).add(docID);
+        if(isNumber(current,docID)){
+            if(after.equals("Thousand")){
+                tokens.remove(index+1);
+                if(termMap.containsKey(current+"K")){
+                    termMap.get(current).add(docID);
+                }
+                else{
+                    termMap.put(current+"K",new ArrayList<String>());
+                    termMap.get(current+"K").add(docID);
+                }
+                return true;
             }
-            else{
-                termMap.put(current+"K",new ArrayList<String>());
-                termMap.get(current+"K").add(docID);
-            }
-            return true;
-        }
 
-        if(after.equals("Million")){
-            tokens.remove(index+1);
-            if(termMap.containsKey(current+"M")){
-                termMap.get(current).add(docID);
+            if(after.equals("Million")){
+                tokens.remove(index+1);
+                if(termMap.containsKey(current+"M")){
+                    termMap.get(current).add(docID);
+                }
+                else{
+                    termMap.put(current+"M",new ArrayList<String>());
+                    termMap.get(current+"M").add(docID);
+                }
             }
-            else{
-                termMap.put(current+"M",new ArrayList<String>());
-                termMap.get(current+"M").add(docID);
+
+            if(after.equals("Billion")){
+                tokens.remove(index+1);
+                if(termMap.containsKey(current+"B")){
+                    termMap.get(current).add(docID);
+                }
+                else{
+                    termMap.put(current+"B",new ArrayList<String>());
+                    termMap.get(current+"B").add(docID);
+                }
             }
         }
 
         return false;
     }
+
 
 
 }
