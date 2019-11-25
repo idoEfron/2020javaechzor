@@ -56,7 +56,7 @@ public class Parser {
     }
 
 
-    public boolean isNumber(String str,String docID){
+    public boolean isNumber(String str,String next,String docID){
         if(Character.isDigit(str.charAt(0))){
             Pattern pattern = Pattern.compile("\\d+(,\\d+)*(\\.\\d+)?");
             if(str.matches("\\d+(,\\d+)*(\\.\\d+)?")) {
