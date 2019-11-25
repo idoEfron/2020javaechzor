@@ -55,14 +55,57 @@ public class Parser {
 
     }
 
-
-    public boolean isNumber(String str,String next,String docID){
+    // *************change public to private**********8
+    public boolean isNumber(String str,String docID){
         if(Character.isDigit(str.charAt(0))){
             Pattern pattern = Pattern.compile("\\d+(,\\d+)*(\\.\\d+)?");
             if(str.matches("\\d+(,\\d+)*(\\.\\d+)?")) {
-                str= str.replaceFirst(",",".");
-                str = str.substring(str.indexOf('.'),str.indexOf('.')+3);
-                str= str+"K";
+                int counter =0;
+                for(int i = 0; i<str.length(); i ++) {
+                    char theChar = str.charAt(i);
+                    if(Character.compare(theChar,',') == 0){
+                        counter++;
+                    }
+                }
+                if (counter >0){
+
+                    boolean dot = false;
+                    for(int i = str.indexOf(',')+3;i> str.indexOf(','); i--){
+                        char theChar = str.charAt(i);
+                        int num = Integer.parseInt(String.valueOf(theChar));
+                        if(num >0){
+                            dot = true;
+
+                        }
+                        else{
+                            if(dot == false)
+                               str = str.substring(0,i);
+                        }
+
+                    }
+                    if(dot == true){
+                        str= str.replaceFirst(",",".");
+                    }
+                    else{
+                        str= str.replaceFirst(",","");
+                    }
+
+                    switch(counter){
+                        case 1:
+                            str = str+"K";
+                            break;
+                        case 2:
+                            str = str+"M";
+                            break;
+                        case 3:
+                            str = str+"B";
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+
                 if(termMap.containsKey(str)){
                     termMap.get(str).add(docID);
                 }
@@ -71,6 +114,47 @@ public class Parser {
                     termMap.get(str).add(docID);
                 }
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    public boolean defineCase(ArrayList<String> tokens, int index, String docID){
+        String before ="";
+        String current=tokens.get(index);;
+        String after="";
+
+        if(index >0){
+            before = tokens.get(index-1);
+        }
+        if(index<tokens.size()){
+            after = tokens.get(index+1);
+        }
+
+        // checks number cases
+
+        if(after.equals("Thousand")){
+            tokens.remove(index+1);
+            if(termMap.containsKey(current+"K")){
+                termMap.get(current).add(docID);
+            }
+            else{
+                termMap.put(current+"K",new ArrayList<String>());
+                termMap.get(current+"K").add(docID);
+            }
+            return true;
+        }
+
+        if(after.equals("Million")){
+            tokens.remove(index+1);
+            if(termMap.containsKey(current+"M")){
+                termMap.get(current).add(docID);
+            }
+            else{
+                termMap.put(current+"M",new ArrayList<String>());
+                termMap.get(current+"M").add(docID);
             }
         }
 
