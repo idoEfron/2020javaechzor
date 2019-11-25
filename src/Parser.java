@@ -12,7 +12,9 @@ public class Parser {
     public Parser(ReadFile read) throws IOException {
         termMap = new HashMap<>();
         stopwords = new HashSet<String>();
-        //add stopwords to hashset
+
+
+        ///add stopwords to hashset
         /*
         this part of the code is from https://howtodoinjava.com/java/io/read-file-from-resources-folder/
          */
@@ -23,35 +25,78 @@ public class Parser {
         String stopLines[] = stopContent.split("\\r?\\n");
         stopwords.addAll(Arrays.asList(stopLines));
         System.out.println(stopwords.size());
-        ///////////////
+        ////call the parseDocs function
         parseDocs(read.allFile);
     }
 
-    public void parseDocs (ArrayList<String> docList) {
-        for (int i=0;i<docList.size();i++) {
-            if(!docList.get(i).equals("\n")&&!docList.get(i).equals("\n\n\n")&&!docList.get(i).equals("\n\n\n\n")&&!docList.get(i).equals("\n\n")) {
+    /**
+     * this function is responsibly is to split the documents to tokens
+     * @param docList
+     */
+    public void parseDocs(ArrayList<String> docList) {
+        for (int i = 0; i < docList.size(); i++) {
+            if (!docList.get(i).equals("\n") && !docList.get(i).equals("\n\n\n") && !docList.get(i).equals("\n\n\n\n") && !docList.get(i).equals("\n\n")) {
                 String docId = docList.get(i);
                 String result = docId.substring(docId.indexOf("<DOCNO>") + 8, docId.indexOf("</DOCNO>") - 1);
-                if (docId.contains("<TEXT>")&&docId.contains("</TEXT>")) {
+                if (docId.contains("<TEXT>") && docId.contains("</TEXT>")) {
                     String txt = docId.substring(docId.indexOf("<TEXT>") + 7, docId.indexOf("</TEXT>"));
                     String[] tokens = txt.split("\\s+|\n");
                     ArrayList<String> afterCleaning = new ArrayList<>();
                     for (int y = 0; y < tokens.length; y++) {
-                        String token = tokens[y];
-                        if (token.length() > 0 && checkChar(token.charAt(0)) == false) {
-                            token = token.substring(1, token.length());
-                        }
-                        if (token.length() > 0 && checkChar(token.charAt(token.length() - 1)) == false) {
-                            token = token.substring(0, token.length() - 1);
-                        }
-                    }
+                        String currToken = tokens[y];
+                        String token = "";
+                        if (currToken.contains("/")) {
+                            if (Character.isDigit(currToken.charAt(0)) == false ||
+                                    Character.isDigit(currToken.charAt(currToken.length() - 1)) == false) {
+                                String[] afterRemoving = currToken.split("/");
+                                for (int j = 0; j < afterRemoving.length; j++) {
+                                    token = cleanToken(afterRemoving[j]);
+                                    if (token.length() > 0) {
+                                        afterCleaning.add(token);
+                                    }
+                                }
+                            }
+                        }else{
+                            token = cleanToken(tokens[y]);
+                            if (token.length() > 0) {
+                                afterCleaning.add(token);
+                            }
+                        }//bracket on the else
+                    }//for on the tokens after splite
                 }
             }
-        }
+        }//bracket on the for on the doc list's
     }
 
+    /**
+     * this function is cleaning the token
+     *
+     * @param token
+     * @return
+     */
+    protected String cleanToken(String token) {
+        if (token.length() > 0 && checkChar(token.charAt(0)) == false) {
+            token = token.substring(1, token.length());
+        }
+        if (token.length() > 0 && checkChar(token.charAt(token.length() - 1)) == false) {
+            token = token.substring(0, token.length() - 1);
+        }
+        if (token.length() > 0 && (checkChar(token.charAt(0)) == false || checkChar(token.charAt(token.length() - 1)) == false)) {
+            token = cleanToken(token);
+        }
+        return token;
+    }
+
+
+    /**
+     * this function check if the char is a comma
+     *
+     * @param charAt
+     * @return
+     */
     private boolean checkChar(char charAt) {
-        return ((charAt >= 65 && charAt <= 90) || (charAt >= 97 && charAt <= 122)||(charAt >= 48 && charAt <= 57));
+        return ((charAt >= 65 && charAt <= 90) || (charAt >= 97 && charAt <= 122) ||
+                (charAt >= 48 && charAt <= 57) || charAt == '$' || charAt == '%');
 
     }
 
@@ -160,7 +205,6 @@ public class Parser {
 
         return false;
     }
-
 
 
 }
