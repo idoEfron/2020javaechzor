@@ -12,6 +12,8 @@ public class Parser {
     public Parser(ReadFile read) throws IOException {
         termMap = new HashMap<String, ArrayList<String>>();
         stopwords = new HashSet<String>();
+
+
         //add stopwords to hashset
         /*
         this part of the code is from https://howtodoinjava.com/java/io/read-file-from-resources-folder/
@@ -23,10 +25,14 @@ public class Parser {
         String stopLines[] = stopContent.split("\\r?\\n");
         stopwords.addAll(Arrays.asList(stopLines));
         System.out.println(stopwords.size());
-        ///////////////
+        ////call the parseDocs function
         parseDocs(read.allFile);
     }
 
+    /**
+     * this function is responsibly is to split the documents to tokens
+     * @param docList
+     */
     public void parseDocs(ArrayList<String> docList) {
         for (int i = 0; i < docList.size(); i++) {
             if (!docList.get(i).equals("\n") && !docList.get(i).equals("\n\n\n") && !docList.get(i).equals("\n\n\n\n") && !docList.get(i).equals("\n\n")) {
@@ -40,28 +46,26 @@ public class Parser {
                         String currToken = tokens[y];
                         String token = "";
                         if (currToken.contains("/")) {
-                            if (Character.isDigit(currToken.charAt(0)) == false || Character.isDigit(currToken.charAt(currToken.length() - 1)) == false) {
-                                {
-                                    String[] afterRemoving = currToken.split("/");
-                                    for (int j = 0; j < afterRemoving.length; j++) {
-                                        token = cleanToken(afterRemoving[j]);
-                                        if (token.length() > 0) {
-                                            afterCleaning.add(token);
-                                        }
+                            if (Character.isDigit(currToken.charAt(0)) == false ||
+                                    Character.isDigit(currToken.charAt(currToken.length() - 1)) == false) {
+                                String[] afterRemoving = currToken.split("/");
+                                for (int j = 0; j < afterRemoving.length; j++) {
+                                    token = cleanToken(afterRemoving[j]);
+                                    if (token.length() > 0) {
+                                        afterCleaning.add(token);
                                     }
                                 }
                             }
-                        } else {
+                        }else{
                             token = cleanToken(tokens[y]);
                             if (token.length() > 0) {
                                 afterCleaning.add(token);
                             }
-                        }
-                    }
-                    System.out.println("");
+                        }//bracket on the else
+                    }//for on the tokens after splite
                 }
             }
-        }
+        }//bracket on the for on the doc list's
     }
 
     /**
@@ -91,7 +95,8 @@ public class Parser {
      * @return
      */
     private boolean checkChar(char charAt) {
-        return ((charAt >= 65 && charAt <= 90) || (charAt >= 97 && charAt <= 122) || (charAt >= 48 && charAt <= 57) || charAt == '$' || charAt == '%');
+        return ((charAt >= 65 && charAt <= 90) || (charAt >= 97 && charAt <= 122) ||
+                (charAt >= 48 && charAt <= 57) || charAt == '$' || charAt == '%');
 
     }
 
