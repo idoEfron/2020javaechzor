@@ -1,3 +1,5 @@
+import com.sun.xml.bind.v2.runtime.unmarshaller.XsiNilLoader;
+
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.*;
@@ -103,6 +105,13 @@ public class Parser {
                                 termMap.put(afterCleaning.get(j),new ArrayList<String>());
                                 termMap.get(afterCleaning.get(j)).add(result);
                             }*/
+                        }
+                        if(afterCleaning.get(j).contains("-")){
+                            String[] strArray = afterCleaning.get(j).split("-");
+                            ArrayList<String> rangeList = new ArrayList<String>();
+                            rangeList.addAll(Arrays.asList(strArray));
+                            //parseDocs(rangeList);
+
                         }
                     }
                 }
@@ -391,5 +400,11 @@ public class Parser {
         return false;
     }
 
+    public boolean rangeHandler(ArrayList<String> tokens, int index, String docID){
 
-}
+
+        return false;
+    }
+
+
+    }
