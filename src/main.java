@@ -9,9 +9,7 @@ public class main {
         ReadFile read = new ReadFile();
         Parser p = new Parser(read);
 
-        NumberFormat format = NumberFormat.getInstance(Locale.FRANCE);
-        Number number = format.parse("1,010.56");
-        double d = number.doubleValue();
-        System.out.println(Double.toString(d));
+
+
     }
 }

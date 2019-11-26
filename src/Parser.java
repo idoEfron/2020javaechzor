@@ -1,5 +1,6 @@
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.text.NumberFormat;
 import java.util.*;
 import java.io.File;
 import java.io.IOException;
@@ -10,11 +11,25 @@ public class Parser {
 
     private Map<String, ArrayList<String>> termMap;
     private HashSet<String> stopwords;
+    private Map<String,Integer > entities;
 
-    public Parser(ReadFile read) throws IOException {
+    public Parser(ReadFile read) throws IOException, ParseException {
         termMap = new HashMap<>();
         stopwords = new HashSet<String>();
-
+        Map<String,String> months= new HashMap<String, String>(){{
+            put("January","01"); put("JANUARY","01");
+            put("February","02"); put("FEBRUARY","02");
+            put("March","03"); put("MARCH","03");
+            put("April","04"); put("APRIL","04");
+            put("May","05"); put("MAY","05");
+            put("June","06"); put("JUNE","06");
+            put("July","07"); put("JULY","07");
+            put("August","08"); put("AUGUST","08");
+            put("September","09"); put("SEPTEMBER","09");
+            put("October","10"); put("OCTOBER","10");
+            put("November","11"); put("NOVEMBER","11");
+            put("December","12"); put("DECEMBER","12");
+        }};
 
         ///add stopwords to hashset
         /*
@@ -33,9 +48,10 @@ public class Parser {
 
     /**
      * this function is responsibly is to split the documents to tokens
+     *
      * @param docList
      */
-    public void parseDocs(ArrayList<String> docList) {
+    public void parseDocs(ArrayList<String> docList) throws ParseException {
         for (int i = 0; i < docList.size(); i++) {
             if (!docList.get(i).equals("\n") && !docList.get(i).equals("\n\n\n") && !docList.get(i).equals("\n\n\n\n") && !docList.get(i).equals("\n\n")) {
                 String docId = docList.get(i);
@@ -58,15 +74,29 @@ public class Parser {
                                     }
                                 }
                             }
-                        }else{
+                        } else {
                             token = cleanToken(tokens[y]);
                             if (token.length() > 0) {
                                 afterCleaning.add(token);
                             }
                         }//bracket on the else
                     }//for on the tokens after splite
+                    for(int j=0;j<afterCleaning.size();j++){
+                        if(!(numberHandler(afterCleaning,j,result))){
+                            stringHandler(afterCleaning,j,result);
+
+                            /*if(termMap.containsKey(afterCleaning.get(j))){
+                                termMap.get(afterCleaning.get(j)).add(result);
+                            }
+                            else{
+                                termMap.put(afterCleaning.get(j),new ArrayList<String>());
+                                termMap.get(afterCleaning.get(j)).add(result);
+                            }*/
+                        }
+                    }
                 }
             }
+            int k = 0;
         }//bracket on the for on the doc list's
     }
 
@@ -102,72 +132,12 @@ public class Parser {
 
     }
 
-    // *************change public to private**********8
+    // *************change public to private***********
+    //checks if the input number is indeed a number
     public boolean isNumber(String str,String docID) throws ParseException {
         if(Character.isDigit(str.charAt(0))){
             Pattern pattern = Pattern.compile("\\d+(,\\d+)*(\\.\\d+)?");
-            if(str.matches("\\d+(,\\d+)*(\\.\\d+)?")) {
-                int counter =0;
-                for(int i = 0; i<str.length(); i ++) {
-                    char theChar = str.charAt(i);
-                    if(Character.compare(theChar,',') == 0){
-                        counter++;
-                    }
-                }
-
-                // handle case of number without additional word (such as thousand, million and etc..)
-                if (counter >0){
-
-                    NumberFormat format = NumberFormat.getInstance(Locale.FRANCE);
-                    Number number = format.parse(str);
-                    double d = number.doubleValue();
-                    str = Double.toString(d);
-
-                    /*boolean dot = false;
-                    for(int i = str.indexOf(',')+3;i> str.indexOf(','); i--){
-                        char theChar = str.charAt(i);
-                        int num = Integer.parseInt(String.valueOf(theChar));
-                        if(num >0){
-                            dot = true;
-
-                        }
-                        else{
-                            if(dot == false)
-                               str = str.substring(0,i);
-                        }
-
-                    }
-                    if(dot == true){
-                        str= str.replaceFirst(",",".");
-                    }
-                    else{
-                        str= str.replaceFirst(",","");
-                    }*/
-
-                    switch(counter){
-                        case 1:
-                            str = str+"K";
-                            break;
-                        case 2:
-                            str = str+"M";
-                            break;
-                        case 3:
-                            str = str+"B";
-                            break;
-                        default:
-                            break;
-                    }
-
-                    if(termMap.containsKey(str)){
-                        termMap.get(str).add(docID);
-                    }
-                    else{
-                        termMap.put(str,new ArrayList<String>());
-                        termMap.get(str).add(docID);
-                    }
-                }
-
-
+            if (str.matches("\\d+(,\\d+)*(\\.\\d+)?")) {
 
                 return true;
             }
@@ -177,29 +147,34 @@ public class Parser {
     }
 
 
-    public boolean defineCase(ArrayList<String> tokens, int index, String docID) throws ParseException {
+    public boolean numberHandler(ArrayList<String> tokens, int index, String docID) throws ParseException {
         String before ="";
         String current=tokens.get(index);;
         String after="";
 
-        if(index >0){
-            before = tokens.get(index-1);
+        String num = current.replaceAll(",","");
+
+
+        if (index > 0) {
+            before = tokens.get(index - 1);
         }
-        if(index<tokens.size()){
-            after = tokens.get(index+1);
+        if (index < tokens.size()-1) {
+            after = tokens.get(index + 1);
         }
 
-        // checks number cases
+        // checks literal number cases
 
-        if(isNumber(current,docID)){
-            if(after.equals("Thousand")){
-                tokens.remove(index+1);
-                if(termMap.containsKey(current+"K")){
-                    termMap.get(current).add(docID);
-                }
-                else{
-                    termMap.put(current+"K",new ArrayList<String>());
-                    termMap.get(current+"K").add(docID);
+        if (isNumber(current, docID)) {
+            if (after.equals("Thousand")) {
+                tokens.remove(index + 1);
+                if (termMap.containsKey(current + "K")) {
+                    if (!termMap.get(current+"K").contains(docID)){
+                        termMap.get(current+"K").add(docID);
+                    }
+
+                } else {
+                    termMap.put(current + "K", new ArrayList<String>());
+                    termMap.get(current + "K").add(docID);
                 }
                 return true;
             }
@@ -207,7 +182,9 @@ public class Parser {
             else if(after.equals("Million")){
                 tokens.remove(index+1);
                 if(termMap.containsKey(current+"M")){
-                    termMap.get(current).add(docID);
+                    if (!termMap.get(current+"M").contains(docID)){
+                        termMap.get(current+"M").add(docID);
+                    }
                 }
                 else{
                     termMap.put(current+"M",new ArrayList<String>());
@@ -218,18 +195,137 @@ public class Parser {
             else if(after.equals("Billion")){
                 tokens.remove(index+1);
                 if(termMap.containsKey(current+"B")){
-                    termMap.get(current).add(docID);
+                    if (!termMap.get(current+"B").contains(docID)){
+                        termMap.get(current+"B").add(docID);
+                    }
+
                 }
                 else{
                     termMap.put(current+"B",new ArrayList<String>());
                     termMap.get(current+"B").add(docID);
                 }
             }
+
+            //checks if the case is percentage
+
+            else if (after.equals("percent") || after.equals("percentage")) {
+                tokens.remove(index + 1);
+                if (termMap.containsKey(current + "%")) {
+                    if (!termMap.get(current+"%").contains(docID)){
+                        termMap.get(current + "%").add(docID);
+                    }
+
+                } else {
+                    termMap.put(current + "%", new ArrayList<String>());
+                    termMap.get(current + "%").add(docID);
+                }
+            }
+
+
+            //regular number
+            else if(Double.parseDouble(num)>=1000){
+                int counter = 0;
+                for (int i = 0; i < current.length(); i++) {
+                    char theChar = current.charAt(i);
+                    if (Character.compare(theChar, ',') == 0) {
+                        counter++;
+                    }
+                }
+
+                // handle case of number without additional word (such as thousand, million and etc..)
+                if (counter >0){
+
+                    NumberFormat format = NumberFormat.getInstance(Locale.FRANCE);
+                    Number number = format.parse(current);
+                    double d = number.doubleValue();
+                    current = Double.toString(d);
+
+                    switch(counter){
+                        case 1:
+                            current= current+ "K";
+                            break;
+                        case 2:
+                            current= current+ "M";
+                            break;
+                        case 3:
+                            current= current+ "B";
+                            break;
+                        default:
+                            break;
+                    }
+
+                    if(termMap.containsKey(current)){
+                        if (!termMap.get(current).contains(docID)){
+                            termMap.get(current).add(docID);
+                        }
+                    }
+                    else{
+                        termMap.put(current,new ArrayList<String>());
+                        termMap.get(current).add(docID);
+                    }
+                }
+            }
+
+            else if(Double.parseDouble(current)<1000){
+                if(termMap.containsKey(current)){
+                    if (!termMap.get(current).contains(docID)){
+                        termMap.get(current).add(docID);
+                    }
+                }
+                else{
+                    termMap.put(current,new ArrayList<String>());
+                    termMap.get(current).add(docID);
+                }
+            }
+
+
         }
 
         return false;
     }
 
+    public boolean stringHandler(ArrayList<String> tokens, int index, String docID){
+
+        String before ="";
+        String current=tokens.get(index);;
+        String after="";
+
+        if (index > 0) {
+            before = tokens.get(index - 1);
+        }
+        if (index < tokens.size()-1) {
+            after = tokens.get(index + 1);
+        }
+
+        if (!stopwords.contains(current.toLowerCase())){
+            if(Character.isUpperCase(current.charAt(0))){
+                if(termMap.containsKey(current.toLowerCase())){
+                    if ((!termMap.get(current.toLowerCase()).contains(docID))){
+                        termMap.get(current.toLowerCase()).add(docID);
+                    }
+                }
+                else if(termMap.containsKey(current.toUpperCase())){
+                    if (!termMap.get(current.toUpperCase()).contains(docID)){
+                        termMap.get(current.toUpperCase()).add(docID);
+                    }
+                }
+                else{
+                    termMap.put(current.toUpperCase(),new ArrayList<String>());
+                    termMap.get(current.toUpperCase()).add(docID);
+                }
+            }
+            else if(Character.isLowerCase(current.charAt(0))){
+                if(termMap.containsKey(current.toUpperCase())){
+                    termMap.put(current.toLowerCase(),termMap.remove(current.toUpperCase())); // remove uppercase key and update to lowercase key
+                    if (!termMap.get(current.toLowerCase()).contains(docID)){
+                        termMap.get(current.toLowerCase()).add(docID);
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
 
 
 }
