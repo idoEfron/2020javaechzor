@@ -12,6 +12,10 @@ public class main {
         ReadFile read = new ReadFile();
         Parser p = new Parser(read);
 
-
+        porterStemmer pr =new porterStemmer();
+        pr.setCurrent("sses");
+        pr.stem();
+        String str = pr.getCurrent();
+        System.out.println(str);
     }
 }

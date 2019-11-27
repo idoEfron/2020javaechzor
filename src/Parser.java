@@ -126,7 +126,7 @@ public class Parser {
             }
             if(terms.get(i).contains("-")){
                 termMap.put(terms.get(i),new HashMap<String, Integer>());
-                termMap.get(terms.get(i)).put(docID,0);
+                termMap.get(terms.get(i)).put(docID,1);
                 String[] strArray = terms.get(i).split("-");
                 ArrayList<String> rangeList = new ArrayList<String>();
                 rangeList.addAll(Arrays.asList(strArray));
@@ -304,10 +304,10 @@ public class Parser {
             else if (months.containsKey(after)) {
                 if (termMap.containsKey(months.get(after) +"-"+current)) {
                     if (termMap.get(months.get(after) +"-"+current).containsKey(docID)){
-                        termMap.get(months.get(after) +"-"+current).put(docID,termMap.get(current+months.get(after)).remove(docID)+1);
+                        termMap.get(months.get(after) +"-"+current).put(docID,termMap.get(months.get(after)+"-"+current).remove(docID)+1);
                     }
                     else{
-                        termMap.get(current+months.get(after)).put(docID, 1);
+                        termMap.get(months.get(after)+"-"+current).put(docID, 1);
                     }
 
                 } else {
@@ -466,7 +466,7 @@ public class Parser {
                 if(termMap.containsKey(current.toUpperCase())){
                     termMap.put(current.toLowerCase(),termMap.remove(current.toUpperCase())); // remove uppercase key and update to lowercase key
                     if (termMap.get(current.toLowerCase()).containsKey(docID)){
-                        termMap.get(current.toLowerCase()).put(docID,termMap.get(current.toUpperCase()).get(docID)+1);
+                        termMap.get(current.toLowerCase()).put(docID,termMap.get(current.toLowerCase()).get(docID)+1);
                     }
                     else{
                         termMap.get(current.toLowerCase()).put(docID,1);
