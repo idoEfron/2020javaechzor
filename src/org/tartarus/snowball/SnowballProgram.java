@@ -237,10 +237,8 @@ public class SnowballProgram {
 		    res = resobj.toString().equals("true");
 		} catch (InvocationTargetException e) {
 		    res = false;
-		    // FIXME - debug message
 		} catch (IllegalAccessException e) {
 		    res = false;
-		    // FIXME - debug message
 		}
 		cursor = c + w.s_size;
 		if (res) return w.result;
@@ -306,10 +304,8 @@ public class SnowballProgram {
 		    res = resobj.toString().equals("true");
 		} catch (InvocationTargetException e) {
 		    res = false;
-		    // FIXME - debug message
 		} catch (IllegalAccessException e) {
 		    res = false;
-		    // FIXME - debug message
 		}
 		cursor = c - w.s_size;
 		if (res) return w.result;
@@ -340,7 +336,6 @@ public class SnowballProgram {
 	    limit > current.length())   // this line could be removed
 	{
 	    System.err.println("faulty slice operation");
-	// FIXME: report error somehow.
 	/*
 	    fprintf(stderr, "faulty slice operation:\n");
 	    debug(z, -1, 0);
