@@ -1,6 +1,8 @@
 
+import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.io.File;
 import java.io.IOException;
@@ -9,38 +11,121 @@ import java.util.regex.Pattern;
 
 public class Parser {
 
-    private Map<String, ArrayList<String>> termMap;
+    private Map<String, Map<String, Integer>> termMap;
     private HashSet<String> stopwords;
     private Map<String, Integer> entities;
+    Map<String, String> months;
+    Map<String, String> mass;
+    Map<String, String> electrical;
 
     public Parser(ReadFile read) throws IOException, ParseException {
         termMap = new HashMap<>();
         stopwords = new HashSet<String>();
-        Map<String, String> months = new HashMap<String, String>() {{
+        months = new HashMap<String, String>() {{
             put("January", "01");
             put("JANUARY", "01");
+            put("JAN", "01");
+            put("Jan", "01");
             put("February", "02");
             put("FEBRUARY", "02");
+            put("Feb", "02");
+            put("FEB", "02");
             put("March", "03");
             put("MARCH", "03");
+            put("MAR", "03");
+            put("Mar", "03");
             put("April", "04");
             put("APRIL", "04");
+            put("APR", "04");
+            put("Apr", "04");
             put("May", "05");
             put("MAY", "05");
             put("June", "06");
             put("JUNE", "06");
+            put("JUN", "06");
+            put("Jun", "06");
             put("July", "07");
             put("JULY", "07");
+            put("JUL", "07");
+            put("Jul", "07");
             put("August", "08");
             put("AUGUST", "08");
+            put("AUG", "08");
+            put("Aug", "08");
             put("September", "09");
             put("SEPTEMBER", "09");
+            put("Sep", "09");
+            put("SEP", "09");
             put("October", "10");
             put("OCTOBER", "10");
+            put("OCT", "10");
+            put("Oct", "10");
             put("November", "11");
             put("NOVEMBER", "11");
+            put("NOV", "11");
+            put("Nov", "11");
             put("December", "12");
             put("DECEMBER", "12");
+            put("DEC", "12");
+            put("Dec", "12");
+        }};
+        mass = new HashMap<String, String>() {{
+            put("kilogram", "KG");
+            put("kilograms", "KG");
+            put("kg", "KG");
+            put("KG", "KG");
+            put("Kilogram", "KG");
+            put("Kilograms", "KG");
+            put("grams", "G");
+            put("gram", "G");
+            put("Grams", "G");
+            put("Gram", "G");
+            put("milligram", "MG");
+            put("Milligram", "MG");
+            put("milligrams", "MG");
+            put("Milligrams", "MG");
+            put("milligram", "MG");
+            put("Milligram", "MG");
+            put("milligrams", "MG");
+            put("Milligrams", "MG");
+            put("ton", "T");
+            put("Tons", "T");
+            put("Ton", "T");
+            put("tons", "T");
+
+        }};
+
+        electrical = new HashMap<String, String>() {{
+            put("milliampere", "mA");
+            put("Milliampere", "mA");
+            put("milli-ampere", "mA");
+            put("Milli-ampere", "mA");
+            put("milliampere".toUpperCase(), "mA");
+            put("Milli-ampere".toUpperCase(), "mA");
+            put("Watt", "W");
+            put("watt", "W");
+            put("watt".toUpperCase(), "W");
+            put("volt", "V");
+            put("Volt", "V");
+            put("VOlT", "V");
+            put("kg", "KG");
+            put("KG", "KG");
+            put("Kilogram", "KG");
+            put("kilograms", "KG");
+            put("Kilogram".toUpperCase(), "KG");
+            put("megawatt", "MW");
+            put("Megawatt", "MW");
+            put("Megawatt".toUpperCase(), "MW");
+            put("Mega-watt", "MW");
+            put("mega-watt", "MW");
+            put("Mega-watt".toUpperCase(), "MW");
+            put("kilowatt", "MW");
+            put("Kilowatt", "MW");
+            put("kilowatt".toUpperCase(), "MW");
+            put("Kilo-watt", "MW");
+            put("kilo-watt", "MW");
+            put("kilo-watt".toUpperCase(), "MW");
+
         }};
 
         ///add stopwords to hashset
@@ -93,10 +178,18 @@ public class Parser {
                             }
                         }//bracket on the else
                     }//for on the tokens after splite
-                    System.out.println("fuck");
-                    for (int j = 0; j < afterCleaning.size(); j++) {
-                        if (!(numberHandler(afterCleaning, j, result))) {
-                            stringHandler(afterCleaning, j, result);
+
+                    handler(afterCleaning, result);
+                }
+            }
+            int k = 0;
+        }//bracket on the for on the doc list's
+    }
+
+    private void handler(ArrayList<String> terms, String docID) throws ParseException {
+        for (int i = 0; i < terms.size(); i++) {
+            if (!(numberHandler(terms, i, docID))) {
+                stringHandler(terms, i, docID);
 
                             /*if(termMap.containsKey(afterCleaning.get(j))){
                                 termMap.get(afterCleaning.get(j)).add(result);
@@ -105,18 +198,22 @@ public class Parser {
                                 termMap.put(afterCleaning.get(j),new ArrayList<String>());
                                 termMap.get(afterCleaning.get(j)).add(result);
                             }*/
-                        }
-                        if (afterCleaning.get(j).contains("-")) {
-                            String[] strArray = afterCleaning.get(j).split("-");
-                            ArrayList<String> rangeList = new ArrayList<String>();
-                            rangeList.addAll(Arrays.asList(strArray));
-                            //parseDocs(rangeList);
-
-                        }
+            }
+            if (terms.get(i).contains("-")) {
+                termMap.put(terms.get(i), new HashMap<String, Integer>());
+                termMap.get(terms.get(i)).put(docID, 1);
+                String[] strArray = terms.get(i).split("-");
+                ArrayList<String> rangeList = new ArrayList<String>();
+                rangeList.addAll(Arrays.asList(strArray));
+                for (int j = 0; j < rangeList.size(); j++) {
+                    if (rangeList.get(j).equals("")) {
+                        rangeList.remove(j);
                     }
                 }
+                handler(rangeList, docID);
+
             }
-        }//bracket on the for on the doc list's
+        }
     }
 
     /**
@@ -178,6 +275,7 @@ public class Parser {
         String afterThree = "";
         String num = current.replaceAll(",", "");
 
+
         if (index > 0) {
             before = tokens.get(index - 1);
         }
@@ -193,57 +291,37 @@ public class Parser {
 
         // checks literal number cases
 
-        if (isNumber(current) || current.contains("$") || current.contains("/")||
-        current.charAt(current.length()-1)=='m'||(current.contains("bn")&&after.equals("Dollars"))) {
-            if (after.equals("Thousand")) {
-                tokens.remove(index + 1);
-                if (termMap.containsKey(current + "K")) {
-                    if (!termMap.get(current + "K").contains(docID)) {
-                        termMap.get(current + "K").add(docID);
-                    }
-
-                } else {
-                    termMap.put(current + "K", new ArrayList<String>());
-                    termMap.get(current + "K").add(docID);
-                }
-                return true;
-            } else if (after.equals("Million")) {
-                tokens.remove(index + 1);
-                if (termMap.containsKey(current + "M")) {
-                    if (!termMap.get(current + "M").contains(docID)) {
-                        termMap.get(current + "M").add(docID);
-                    }
-                } else {
-                    termMap.put(current + "M", new ArrayList<String>());
-                    termMap.get(current + "M").add(docID);
-                }
-            } else if (after.equals("Billion")) {
-                tokens.remove(index + 1);
-                if (termMap.containsKey(current + "B")) {
-                    if (!termMap.get(current + "B").contains(docID)) {
-                        termMap.get(current + "B").add(docID);
-                    }
-
-                } else {
-                    termMap.put(current + "B", new ArrayList<String>());
-                    termMap.get(current + "B").add(docID);
-                }
+        if (isNumber(current) || current.contains("$") || current.contains("/") || current.charAt(current.length() - 1) == 'm' ||
+                (current.contains("bn") && after.equals("Dollars"))) {
+            if (after.contains("Thousand") || after.contains("Thousand".toLowerCase()) || after.contains("Thousand".toUpperCase())) {
+                putTerm(current, "K", docID);
+            } else if (after.contains("Million") || after.contains("Million".toLowerCase()) || after.contains("Million".toUpperCase())) {
+                putTerm(current, "M", docID);
+            } else if (after.contains("Billion") || after.contains("Billion".toLowerCase()) || after.contains("Billion".toUpperCase())) {
+                putTerm(current, "B", docID);
             }
-
             //checks if the case is percentage
 
-            else if (after.equals("percent") || after.equals("percentage")) {
-                tokens.remove(index + 1);
-                if (termMap.containsKey(current + "%")) {
-                    if (!termMap.get(current + "%").contains(docID)) {
-                        termMap.get(current + "%").add(docID);
-                    }
-
-                } else {
-                    termMap.put(current + "%", new ArrayList<String>());
-                    termMap.get(current + "%").add(docID);
-                }
+            else if (after.contains("percent") || after.contains("percentage") ||
+                    after.contains("Percentage") || after.contains("Percent")) {
+                putTerm(current, "%", docID);
+                return true;
             }
+
+            //checks if expression is mass units
+            else if (mass.containsKey(after)) {
+                putTerm(current, mass.get(after), docID);
+            }
+            //checks if expression is electrical units
+            else if (electrical.containsKey(after)) {
+                putTerm(current, electrical.get(after), docID);
+            }
+
+            //checks if expression is date
+            else if (months.containsKey(after)) {
+                putTerm(months.get(after) + "-", current, docID);
+            }
+
             //*******************dollars************************************************
             else if (after.equals("Dollars") ||
                     current.contains("$") || (after.equals("billion") && afterTwo.equals("U.S")
@@ -333,25 +411,21 @@ public class Parser {
                     }
 
                     if (termMap.containsKey(current)) {
-                        if (!termMap.get(current).contains(docID)) {
-                            termMap.get(current).add(docID);
+                        if (termMap.get(current).containsKey(docID)) {
+                            termMap.get(current).put(docID, termMap.get(current).remove(docID) + 1);
+                        } else {
+                            termMap.get(current).put(docID, 1);
+
                         }
                     } else {
-                        termMap.put(current, new ArrayList<String>());
-                        termMap.get(current).add(docID);
+                        termMap.put(current, new HashMap<String, Integer>());
+                        termMap.get(current).put(docID, 1);
                     }
                 }
             } else if (Double.parseDouble(current) < 1000) {
-                if (termMap.containsKey(current)) {
-                    if (!termMap.get(current).contains(docID)) {
-                        termMap.get(current).add(docID);
-                    }
-                } else {
-                    termMap.put(current, new ArrayList<String>());
-                    termMap.get(current).add(docID);
-                }
+                putTerm(current, "", docID);
             }
-
+            return true;
         }
         return false;
     }
@@ -365,17 +439,20 @@ public class Parser {
      */
     private void putTerm(String current, String character, String docId) {
         if (termMap.containsKey(current + character)) {
-            if (!termMap.get(current + character).contains(docId)) {
-                termMap.get(current + character).add(docId);
+            if (termMap.get(current + character).containsKey(docId)) {
+                termMap.get(current + character).put(docId, termMap.get(current + character).get(docId) + 1);
+            } else {
+                termMap.get(current + character).put(docId, 1);
+
             }
 
         } else {
-            termMap.put(current + character, new ArrayList<String>());
-            termMap.get(current + character).add(docId);
+            termMap.put(current + character, new HashMap<String, Integer>());
+            termMap.get(current + character).put(docId, 1);
         }
     }
 
-    public boolean stringHandler(ArrayList<String> tokens, int index, String docID) {
+    public boolean stringHandler(ArrayList<String> tokens, int index, String docID) throws ParseException {
 
         String before = "";
         String current = tokens.get(index);
@@ -390,25 +467,70 @@ public class Parser {
         }
 
         if (!stopwords.contains(current.toLowerCase())) {
+            int num = -1;
+            try {
+                num = Integer.parseInt(after);
+                if (months.containsKey(current)) {
+                    if (num > 0 && num <= 31) {
+                        if (termMap.containsKey(months.get(current) + "-" + after)) {
+                            if (termMap.get(months.get(current) + "-" + after).containsKey(docID)) {
+                                termMap.get(months.get(current) + "-" + after).put(docID, termMap.get(months.get(current) + "-" + after).get(docID) + 1);
+                            } else {
+                                termMap.get(months.get(current) + "-" + after).put(docID, 1);
+                            }
+
+                        } else {
+                            termMap.put(months.get(current) + "-" + after, new HashMap<String, Integer>());
+                            termMap.get(months.get(current) + "-" + after).put(docID, 1);
+                        }
+                    } else if (num > 1900 && isValidDate(after)) {
+                        if (months.containsKey(after + "-" + months.get(current))) {
+                            if (termMap.get(after + "-" + months.get(current)).containsKey(docID)) {
+                                termMap.get(after + "-" + months.get(current)).put(docID, termMap.get(months.get(current) + "-" + after).get(docID) + 1);
+                            } else {
+                                termMap.get(after + "-" + months.get(current)).put(docID, 1);
+                            }
+
+                        } else {
+                            termMap.put(after + "-" + months.get(current), new HashMap<String, Integer>());
+                            termMap.get(after + "-" + months.get(current)).put(docID, 1);
+                        }
+                    }
+
+                }
+            } catch (NumberFormatException e) {
+                //term is not a date
+
+            }
+
             if (Character.isUpperCase(current.charAt(0))) {
                 if (termMap.containsKey(current.toLowerCase())) {
-                    if ((!termMap.get(current.toLowerCase()).contains(docID))) {
-                        termMap.get(current.toLowerCase()).add(docID);
+                    if ((termMap.get(current.toLowerCase()).containsKey(docID))) {
+                        termMap.get(current.toLowerCase()).put(docID, termMap.get(current.toLowerCase()).get(docID) + 1);
+                    } else {
+                        termMap.get(current.toLowerCase()).put(docID, 1);
                     }
                 } else if (termMap.containsKey(current.toUpperCase())) {
-                    if (!termMap.get(current.toUpperCase()).contains(docID)) {
-                        termMap.get(current.toUpperCase()).add(docID);
+                    if (termMap.get(current.toUpperCase()).containsKey(docID)) {
+                        termMap.get(current.toUpperCase()).put(docID, termMap.get(current.toUpperCase()).get(docID) + 1);
+                    } else {
+                        termMap.get(current.toUpperCase()).put(docID, 1);
+
                     }
                 } else {
-                    termMap.put(current.toUpperCase(), new ArrayList<String>());
-                    termMap.get(current.toUpperCase()).add(docID);
+                    termMap.put(current.toUpperCase(), new HashMap<String, Integer>());
+                    termMap.get(current.toUpperCase()).put(docID, 1);
                 }
             } else if (Character.isLowerCase(current.charAt(0))) {
                 if (termMap.containsKey(current.toUpperCase())) {
                     termMap.put(current.toLowerCase(), termMap.remove(current.toUpperCase())); // remove uppercase key and update to lowercase key
-                    if (!termMap.get(current.toLowerCase()).contains(docID)) {
-                        termMap.get(current.toLowerCase()).add(docID);
+                    if (termMap.get(current.toLowerCase()).containsKey(docID)) {
+                        termMap.get(current.toLowerCase()).put(docID, termMap.get(current.toLowerCase()).get(docID) + 1);
+                    } else {
+                        termMap.get(current.toLowerCase()).put(docID, 1);
                     }
+                } else {
+                    //ask about use case
                 }
             }
         }
@@ -416,10 +538,15 @@ public class Parser {
         return false;
     }
 
-    public boolean rangeHandler(ArrayList<String> tokens, int index, String docID) {
-
-
-        return false;
+    public boolean isValidDate(String dateStr) {
+        DateFormat sdf = new SimpleDateFormat("YYYY");
+        sdf.setLenient(false);
+        try {
+            sdf.parse(dateStr);
+        } catch (ParseException e) {
+            return false;
+        }
+        return true;
     }
 
     /**
