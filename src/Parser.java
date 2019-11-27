@@ -1,4 +1,3 @@
-import com.sun.xml.bind.v2.runtime.unmarshaller.XsiNilLoader;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -76,17 +75,17 @@ public class Parser {
                     for (int y = 0; y < tokens.length; y++) {
                         String currToken = tokens[y];
                         String token = "";
-                        if (currToken.contains("/")) {
-                            if (Character.isDigit(currToken.charAt(0)) == false ||
-                                    Character.isDigit(currToken.charAt(currToken.length() - 1)) == false) {
-                                String[] afterRemoving = currToken.split("/");
-                                for (int j = 0; j < afterRemoving.length; j++) {
-                                    token = cleanToken(afterRemoving[j]);
-                                    if (token.length() > 0) {
-                                        afterCleaning.add(token);
-                                    }
+                        if (currToken.contains("/") &&
+                                (Character.isDigit(currToken.charAt(0)) == false ||
+                                        Character.isDigit(currToken.charAt(currToken.length() - 1)) == false)) {
+                            String[] afterRemoving = currToken.split("/");
+                            for (int j = 0; j < afterRemoving.length; j++) {
+                                token = cleanToken(afterRemoving[j]);
+                                if (token.length() > 0) {
+                                    afterCleaning.add(token);
                                 }
                             }
+
                         } else {
                             token = cleanToken(tokens[y]);
                             if (token.length() > 0) {
@@ -94,6 +93,7 @@ public class Parser {
                             }
                         }//bracket on the else
                     }//for on the tokens after splite
+                    System.out.println("fuck");
                     for (int j = 0; j < afterCleaning.size(); j++) {
                         if (!(numberHandler(afterCleaning, j, result))) {
                             stringHandler(afterCleaning, j, result);
@@ -106,7 +106,7 @@ public class Parser {
                                 termMap.get(afterCleaning.get(j)).add(result);
                             }*/
                         }
-                        if(afterCleaning.get(j).contains("-")){
+                        if (afterCleaning.get(j).contains("-")) {
                             String[] strArray = afterCleaning.get(j).split("-");
                             ArrayList<String> rangeList = new ArrayList<String>();
                             rangeList.addAll(Arrays.asList(strArray));
@@ -134,6 +134,9 @@ public class Parser {
         }
         if (token.length() > 0 && (checkChar(token.charAt(0)) == false || checkChar(token.charAt(token.length() - 1)) == false)) {
             token = cleanToken(token);
+        }
+        if (token.length() == 1 && (token.equals("%") || token.equals("$"))) {
+            token = "";
         }
         return token;
     }
@@ -190,7 +193,8 @@ public class Parser {
 
         // checks literal number cases
 
-        if (isNumber(current) || current.contains("$") || current.contains("/")) {
+        if (isNumber(current) || current.contains("$") || current.contains("/")||
+        current.charAt(current.length()-1)=='m'||(current.contains("bn")&&after.equals("Dollars"))) {
             if (after.equals("Thousand")) {
                 tokens.remove(index + 1);
                 if (termMap.containsKey(current + "K")) {
@@ -241,52 +245,60 @@ public class Parser {
                 }
             }
             //*******************dollars************************************************
-            else if (after.equals("Dollars") || current.contains("$") || (after.equals("billion") && afterTwo.equals("U.S")
-                    && afterThree.equals("dollars")) || (after.equals("million") && afterTwo.equals("U.S")) && afterThree.equals("dollars")) {
+            else if (after.equals("Dollars") ||
+                    current.contains("$") || (after.equals("billion") && afterTwo.equals("U.S")
+                    && afterThree.equals("dollars")) || (after.equals("million") && afterTwo.equals("U.S"))
+                    && afterThree.equals("dollars")) {
+
                 if (current.contains("$")) {
                     current = current.substring(1);
                     String numDub = current.replaceAll(",", "");
-                    if ((Double.parseDouble(numDub) < 1000000)&&(!after.equals("million")||!after.equals("billion"))) {
-                        putTerm(current, " Dollars",docID);
-                    }else if(after.equals("million")){
-                        putTerm(current, " M Dollars",docID);
-                    }else if(after.equals("billion")){
-                        putTerm(current+"000", " M Dollars",docID);
-                    }
-                    else if(Double.parseDouble(numDub) >= 1000000){
-                        NumberFormat format = NumberFormat.getInstance(Locale.FRANCE);
-                        Number number = format.parse(current);
-                        double d = number.doubleValue();
-                        current = Double.toString(d);
-                        putTerm(current, " M Dollars",docID);
+                    if ((Double.parseDouble(numDub) < 1000000)) {
+                        if (!after.equals("million") && !after.equals("billion")) {
+                            putTerm(current, " Dollars", docID);
+                            return true;
+                        } else if (after.equals("million")) {
+                            putTerm(current, " M Dollars", docID);
+                            return true;
+                        } else if (after.equals("billion")) {
+                            putTerm(current + "000", " M Dollars", docID);
+                            return true;
+                        }
+                    } else if (Double.parseDouble(numDub) >= 1000000) {
+                        current = format(current);
+                        putTerm(current, " M Dollars", docID);
+                        return true;
                     }
                 }////$$$$
-                else if(after.equals("Dollars")){
-                    if(current.contains("m")){
-                        current = current.substring(0,current.length()-1);
-                        putTerm(current, " M Dollars",docID);
-                    }else if(current.contains("bn")){
-                        putTerm(current.substring(0,current.length()-2)+"000", " M Dollars",docID);
-
+                else if (after.equals("Dollars")) {
+                    if (current.contains("m")) {
+                        current = current.substring(0, current.length() - 1);
+                        putTerm(current, " M Dollars", docID);
+                        return true;
+                    } else if (current.contains("bn")) {
+                        current = current.substring(0, current.length() - 2);
+                        putTerm(current + "000", " M Dollars", docID);
+                        return true;
                     }
                     String numDub = current.replaceAll(",", "");
-                    if(Double.parseDouble(numDub) >= 1000000&&!current.contains("/")){
-                        NumberFormat format = NumberFormat.getInstance(Locale.FRANCE);
-                        Number number = format.parse(current);
-                        double d = number.doubleValue();
-                        current = Double.toString(d);
-                        putTerm(current, " M Dollars",docID);
+                    if (!current.contains("/") && Double.parseDouble(numDub) >= 1000000) {
+                        current = format(current);
+                        putTerm(current, " M Dollars", docID);
+                        return true;
+                    } else if (!current.contains("/") && Double.parseDouble(numDub) < 1000000) {
+                        putTerm(current, " Dollars", docID);
+                        return true;
+                    } else if (isNumber(before) && current.contains("/")) {
+                        putTerm(before + " " + current, " Dollars", docID);
+                        return true;
                     }
-                    else if(Double.parseDouble(numDub) < 1000000 && !current.contains("/")){
-                        putTerm(current, " Dollars",docID);
-                    }else if(isNumber(before)&&current.contains("/")){
-                        putTerm( before+" "+current, " Dollars",docID);
-                    }
-                }else if(isNumber(current)&&after.equals("billion")&&afterTwo.equals("U.S")&&afterThree.equals("dollars")){
-                    putTerm(current+"000", " M Dollars",docID);
-                }
-                else if(isNumber(current)&&after.equals("million")&&afterTwo.equals("U.S")&&afterThree.equals("dollars")){
-                    putTerm(current, " M Dollars",docID);
+                }////////*******dollars********///////////////////
+                else if (isNumber(current) && after.equals("billion") && afterTwo.equals("U.S") && afterThree.equals("dollars")) {
+                    putTerm(current + "000", " M Dollars", docID);
+                    return true;
+                } else if (isNumber(current) && after.equals("million") && afterTwo.equals("U.S") && afterThree.equals("dollars")) {
+                    putTerm(current, " M Dollars", docID);
+                    return true;
                 }
             }
 
@@ -304,10 +316,7 @@ public class Parser {
                 // handle case of number without additional word (such as thousand, million and etc..)
                 if (counter > 0) {
 
-                    NumberFormat format = NumberFormat.getInstance(Locale.FRANCE);
-                    Number number = format.parse(current);
-                    double d = number.doubleValue();
-                    current = Double.toString(d);
+                    current = format(current);///*****////
 
                     switch (counter) {
                         case 1:
@@ -347,6 +356,13 @@ public class Parser {
         return false;
     }
 
+    /**
+     * ido create put term
+     *
+     * @param current
+     * @param character
+     * @param docId
+     */
     private void putTerm(String current, String character, String docId) {
         if (termMap.containsKey(current + character)) {
             if (!termMap.get(current + character).contains(docId)) {
@@ -400,11 +416,27 @@ public class Parser {
         return false;
     }
 
-    public boolean rangeHandler(ArrayList<String> tokens, int index, String docID){
+    public boolean rangeHandler(ArrayList<String> tokens, int index, String docID) {
 
 
         return false;
     }
 
-
+    /**
+     * ido add this function that change the format of the number
+     *
+     * @param current
+     * @return
+     * @throws ParseException
+     */
+    private String format(String current) throws ParseException {
+        NumberFormat format = NumberFormat.getInstance(Locale.FRANCE);
+        Number number = format.parse(current);
+        double d = number.doubleValue();
+        if (d == (long) d)
+            return String.format("%d", (long) d);
+        else
+            return String.format("%s", d);
     }
+
+}
