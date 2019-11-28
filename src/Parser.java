@@ -214,6 +214,7 @@ public class Parser {
 
             }
         }
+        System.out.println("");
     }
 
     /**
@@ -295,19 +296,18 @@ public class Parser {
                 (current.contains("bn") && after.equals("Dollars"))) {
             if (after.contains("Thousand") || after.contains("Thousand".toLowerCase()) || after.contains("Thousand".toUpperCase())) {
                 putTerm(current, "K", docID);
-            } else if (after.contains("Million") || after.contains("Million".toLowerCase()) || after.contains("Million".toUpperCase())) {
+            } else if (!current.contains("$")&&!afterTwo.equals("U.S")&&!afterThree.equals("dollars")&&(after.contains("Million") || after.contains("Million".toLowerCase()) || after.contains("Million".toUpperCase()))) {
                 putTerm(current, "M", docID);
-            } else if (after.contains("Billion") || after.contains("Billion".toLowerCase()) || after.contains("Billion".toUpperCase())) {
+            } else if (!afterThree.equals("dollars")&&!afterTwo.equals("U.S")&&!current.contains("$")&&(after.contains("Billion") || after.contains("Billion".toLowerCase()) || after.contains("Billion".toUpperCase()))) {
                 putTerm(current, "B", docID);
             }
-            //checks if the case is percentage
-
+            //***************checks if the case is percentage***************************////
             else if (after.contains("percent") || after.contains("percentage") ||
                     after.contains("Percentage") || after.contains("Percent")) {
                 putTerm(current, "%", docID);
                 return true;
             }
-
+            /***************precent********************************/////
             //checks if expression is mass units
             else if (mass.containsKey(after)) {
                 putTerm(current, mass.get(after), docID);
@@ -318,7 +318,7 @@ public class Parser {
             }
 
             //checks if expression is date
-            else if (months.containsKey(after)) {
+            else if (Integer.parseInt(current)<=31 &&Integer.parseInt(current)>=0 && months.containsKey(after)) {
                 putTerm(months.get(after) + "-", current, docID);
             }
 
@@ -423,7 +423,12 @@ public class Parser {
                     }
                 }
             } else if (Double.parseDouble(current) < 1000) {
-                putTerm(current, "", docID);
+                if(!after.contains("/")) {
+                    putTerm(current, "", docID);
+                }else if(after.contains("/")&&!afterTwo.equals("Dollars")){
+                    putTerm(current, " "+after, docID);
+                    tokens.remove(index+1);
+                }
             }
             return true;
         }
@@ -466,7 +471,7 @@ public class Parser {
             after = tokens.get(index + 1);
         }
 
-        if (!stopwords.contains(current.toLowerCase())) {
+        if (months.containsKey(current) || !stopwords.contains(current.toLowerCase())) {
             int num = -1;
             try {
                 num = Integer.parseInt(after);
