@@ -192,6 +192,7 @@ public class Parser {
                 }
             }
             wordCounter.put(result,termsInDoc.size());
+            termsInDoc.clear();
             int k = 0;
         }//bracket on the for on the doc list's
     }
