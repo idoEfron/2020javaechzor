@@ -477,17 +477,18 @@ public class Parser {
                 num = Integer.parseInt(after);
                 if (months.containsKey(current)) {
                     if (num > 0 && num <= 31) {
-                        if (termMap.containsKey(months.get(current) + "-" + after)) {
-                            if (termMap.get(months.get(current) + "-" + after).containsKey(docID)) {
-                                termMap.get(months.get(current) + "-" + after).put(docID, termMap.get(months.get(current) + "-" + after).get(docID) + 1);
+                            if (termMap.containsKey(months.get(current) + "-" + after)) {
+                                if (termMap.get(months.get(current) + "-" + after).containsKey(docID)) {
+                                    termMap.get(months.get(current) + "-" + after).put(docID, termMap.get(months.get(current) + "-" + after).get(docID) + 1);
+                                } else {
+                                    termMap.get(months.get(current) + "-" + after).put(docID, 1);
+                                }
+
                             } else {
+                                termMap.put(months.get(current) + "-" + after, new HashMap<String, Integer>());
                                 termMap.get(months.get(current) + "-" + after).put(docID, 1);
                             }
 
-                        } else {
-                            termMap.put(months.get(current) + "-" + after, new HashMap<String, Integer>());
-                            termMap.get(months.get(current) + "-" + after).put(docID, 1);
-                        }
                     } else if (num > 1900 && isValidDate(after)) {
                         if (months.containsKey(after + "-" + months.get(current))) {
                             if (termMap.get(after + "-" + months.get(current)).containsKey(docID)) {
