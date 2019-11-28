@@ -16,15 +16,21 @@ public class Parser {
     private Map<String, Map<String, Integer>> termMap;
     private HashSet<String> stopwords;
     private Map<String, Integer> entities;
-    Map<String, String> months;
-    Map<String, String> mass;
-    Map<String, String> electrical;
-    private boolean stem;
+    private Map<String, String> months;
+    private Map<String, String> mass;
+    private Map<String, String> electrical;
+    private boolean stemming;
+    private Map<String, Integer> maxTf;
+    private Map<String,Integer> wordCounter;
+    private List<String> termsInDoc;
 
-    public Parser(ReadFile read, boolean stemmer) throws IOException, ParseException {
+    public Parser(ReadFile read,boolean stem) throws IOException, ParseException {
+        wordCounter = new HashMap<>();
+        termsInDoc = new ArrayList<>();
+        stemming = stem;
+        maxTf = new HashMap<>();
         termMap = new HashMap<>();
         stopwords = new HashSet<String>();
-        this.stem = stemmer;
         months = new HashMap<String, String>() {{
             put("January", "01");
             put("JANUARY", "01");
@@ -153,10 +159,11 @@ public class Parser {
      * @param docList
      */
     public void parseDocs(ArrayList<String> docList) throws ParseException {
+        String result ="";
         for (int i = 0; i < docList.size(); i++) {
             if (!docList.get(i).equals("\n") && !docList.get(i).equals("\n\n\n") && !docList.get(i).equals("\n\n\n\n") && !docList.get(i).equals("\n\n")) {
                 String docId = docList.get(i);
-                String result = docId.substring(docId.indexOf("<DOCNO>") + 8, docId.indexOf("</DOCNO>") - 1);
+                result = docId.substring(docId.indexOf("<DOCNO>") + 8, docId.indexOf("</DOCNO>") - 1);
                 if (docId.contains("<TEXT>") && docId.contains("</TEXT>")) {
                     String txt = docId.substring(docId.indexOf("<TEXT>") + 7, docId.indexOf("</TEXT>"));
                     String[] tokens = txt.split("\\s+|\n");
@@ -181,11 +188,12 @@ public class Parser {
                                 afterCleaning.add(token);
                             }
                         }//bracket on the else
-                    }//for on the tokens after splite
+                    }//for on the tokens after split
 
                     handler(afterCleaning, result);
                 }
             }
+            wordCounter.put(result,termsInDoc.size());
             int k = 0;
         }//bracket on the for on the doc list's
     }
@@ -217,7 +225,6 @@ public class Parser {
 
             }
         }
-        System.out.println("");
     }
 
     /**
@@ -448,16 +455,39 @@ public class Parser {
     private void putTerm(String current, String character, String docId) {
         if (termMap.containsKey(current + character)) {
             if (termMap.get(current + character).containsKey(docId)) {
-                termMap.get(current + character).put(docId, termMap.get(current + character).get(docId) + 1);
+                termMap.get(current + character).put(docId, termMap.get(current + character).remove(docId) + 1);
+                updateMaxTf(current,character,docId);
+                updateWordList(current,character);
+
             } else {
                 termMap.get(current + character).put(docId, 1);
-
+                updateMaxTf(current,character,docId);
+                updateWordList(current,character);
             }
 
         } else {
             termMap.put(current + character, new HashMap<String, Integer>());
             termMap.get(current + character).put(docId, 1);
+            updateMaxTf(current,character,docId);
+            updateWordList(current,character);
         }
+    }
+
+    public void updateMaxTf(String current, String character, String docID){
+        if(maxTf.containsKey(docID)){
+            maxTf.put(docID,Math.max(termMap.get(current + character).get(docID),maxTf.get(docID)));
+
+        }
+        else{
+            maxTf.put(docID,termMap.get(current + character).get(docID));
+        }
+    }
+
+    public void updateWordList(String current, String character){
+        if(!termsInDoc.contains(current + character)){
+            termsInDoc.add(current + character);
+        }
+
     }
 
     public boolean stringHandler(ArrayList<String> tokens, int index, String docID) throws ParseException {
@@ -514,25 +544,25 @@ public class Parser {
             /***lower/upper**////
             if (Character.isUpperCase(current.charAt(0))) {
                 if (termMap.containsKey(current.toLowerCase())) {
-                    putTermString(current.toLowerCase(), docID, stem);
+                    putTermString(current.toLowerCase(), docID, stemming);
                 } else if (termMap.containsKey(current.toUpperCase())) {
-                    putTermString(current.toUpperCase(), docID, stem);
+                    putTermString(current.toUpperCase(), docID, stemming);
                 } else {
-                    simpleInsert(current.toUpperCase(), docID, stem);
+                    simpleInsert(current.toUpperCase(), docID, stemming);
                     return true;
                 }
             } else if (Character.isLowerCase(current.charAt(0))) {
                 if (termMap.containsKey(current.toUpperCase())) {
                     termMap.put(current.toLowerCase(), termMap.remove(current.toUpperCase())); // remove uppercase key and update to lowercase key
-                    putTermString(current.toLowerCase(), docID, stem);
+                    putTermString(current.toLowerCase(), docID, stemming);
                     return true;
 
                 } else {
-                    simpleInsert(current, docID, stem);
+                    simpleInsert(current, docID, stemming);
                     return true;
                 }
             } else {
-                simpleInsert(current, docID, stem);
+                simpleInsert(current, docID, stemming);
                 return true;
             }
             return true;
