@@ -15,7 +15,7 @@ public class Parser {
 
     private Map<String, Map<String, Integer>> termMap;
     private HashSet<String> stopwords;
-    private Map<String, Integer> entities;
+    private Map<String, HashSet<String>> entities;
     private Map<String, String> months;
     private Map<String, String> mass;
     private Map<String, String> electrical;
@@ -24,13 +24,14 @@ public class Parser {
     private Map<String,Integer> wordCounter;
     private List<String> termsInDoc;
 
-    public Parser(ReadFile read,boolean stem) throws IOException, ParseException {
+    public Parser(boolean stem) throws IOException, ParseException {
         wordCounter = new HashMap<>();
         termsInDoc = new ArrayList<>();
         stemming = stem;
         maxTf = new HashMap<>();
         termMap = new HashMap<>();
         stopwords = new HashSet<String>();
+        entities= new HashMap<>();
         months = new HashMap<String, String>() {{
             put("January", "01");
             put("JANUARY", "01");
@@ -150,7 +151,6 @@ public class Parser {
         stopwords.addAll(Arrays.asList(stopLines));
         System.out.println(stopwords.size());
         ////call the parseDocs function
-        parseDocs(read.allFile);
     }
 
     /**
@@ -194,6 +194,7 @@ public class Parser {
                 }
             }
             wordCounter.put(result,termsInDoc.size());
+            termsInDoc.clear();
             int k = 0;
         }//bracket on the for on the doc list's
     }
@@ -302,7 +303,7 @@ public class Parser {
 
         // checks literal number cases
 
-        if (isNumber(current) || current.contains("$") || current.contains("/") || current.charAt(current.length() - 1) == 'm' ||
+        if (isNumber(current) || current.contains("$") || current.contains("/") || (Character.isDigit(current.charAt(0)) && (Character.compare(current.charAt(current.length() - 1) ,'m') ==0)) ||
                 (current.contains("bn") && after.equals("Dollars"))) {
             if (after.contains("Thousand") || after.contains("Thousand".toLowerCase()) || after.contains("Thousand".toUpperCase())) {
                 putTerm(current, "K", docID);
@@ -543,6 +544,7 @@ public class Parser {
             }
             /***lower/upper**////
             if (Character.isUpperCase(current.charAt(0))) {
+                checkEntity(tokens,index,docID);
                 if (termMap.containsKey(current.toLowerCase())) {
                     putTermString(current.toLowerCase(), docID, stemming);
                 } else if (termMap.containsKey(current.toUpperCase())) {
@@ -569,6 +571,34 @@ public class Parser {
         }
 
         return false;
+    }
+
+    private void checkEntity(ArrayList<String> tokens, int index, String docID) {
+        String entity="";
+        while(index<tokens.size()&& Character.isUpperCase(tokens.get(index).charAt(0))){
+            if((index+1)<tokens.size() && Character.isUpperCase(tokens.get(index+1).charAt(0))){
+                entity=entity+tokens.get(index)+" ";
+            }
+            else{
+                entity=entity+tokens.get(index);
+            }
+
+            index++;
+        }
+
+        if(entities.containsKey(tokens.get(index-1)) ){
+            entities.get(entity).add(docID);
+        }
+        else{
+            String[] entA = entity.split("[- ]");
+            if(entA.length>1){
+                entities.put(entity,new HashSet<>());
+                entities.get(entity).add(docID);
+                ArrayList<String> entL = new ArrayList<>(Arrays.asList(entA));
+                entL.remove(entL.size()-1);
+                checkEntity(entL,0,docID);
+            }
+        }
     }
 
     private void simpleInsert(String current, String docID, boolean stem) {
@@ -623,5 +653,7 @@ public class Parser {
         else
             return String.format("%s", d);
     }
+
+
 
 }
