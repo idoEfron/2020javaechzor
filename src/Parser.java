@@ -24,6 +24,7 @@ public class Parser {
     private Map<String, Integer> wordCounter;
     private List<String> termsInDoc;
 
+
     public Parser(boolean stem) throws IOException, ParseException {
         wordCounter = new HashMap<>();
         termsInDoc = new ArrayList<>();
@@ -165,7 +166,7 @@ public class Parser {
             if (!docList.get(i).equals("\n") && !docList.get(i).equals("\n\n\n") && !docList.get(i).equals("\n\n\n\n") && !docList.get(i).equals("\n\n")) {
                 String docId = docList.get(i);
                 docNo = docId.substring(docId.indexOf("<DOCNO>") + 8, docId.indexOf("</DOCNO>") - 1);
-                title = docId.substring(docId.indexOf("<TI>") + 10, docId.indexOf("</TI>"));
+                title = docId.substring(docId.indexOf("<TI>") +10, docId.indexOf("</TI>"));
                 if (docId.contains("<TEXT>") && docId.contains("</TEXT>")) {
                     String txt = docId.substring(docId.indexOf("<TEXT>") + 7, docId.indexOf("</TEXT>") - 2);
                     String[] tokens = txt.split("\\s+|\n");
@@ -177,9 +178,7 @@ public class Parser {
                         if (title.contains(currToken)) {
                             inTitle = true;
                         }
-                        if (currToken.contains("/") &&
-                                (Character.isDigit(currToken.charAt(0)) == false ||
-                                        Character.isDigit(currToken.charAt(currToken.length() - 1)) == false)) {
+                        if (currToken.contains("/") && (Character.isDigit(currToken.charAt(0)) == false || Character.isDigit(currToken.charAt(currToken.length() - 1)) == false)) {
                             String[] afterRemoving = currToken.split("/");
                             for (int j = 0; j < afterRemoving.length; j++) {
                                 token = cleanToken(afterRemoving[j]);
@@ -198,9 +197,10 @@ public class Parser {
 
                     handler(afterCleaning, docNo, title);
                 }
+                wordCounter.put(docNo, termsInDoc.size());
+                termsInDoc.clear();
             }
-            wordCounter.put(docNo, termsInDoc.size());
-            termsInDoc.clear();
+
         }//bracket on the for on the doc list's
         index.addBlock(this);
     }
@@ -209,13 +209,7 @@ public class Parser {
         for (int i = 0; i < terms.size(); i++) {
             if (!(numberHandler(terms, i, docID, title))) {
                 stringHandler(terms, i, docID,title);
-                            /*if(termMap.containsKey(afterCleaning.get(j))){
-                                termMap.get(afterCleaning.get(j)).add(result);
-                            }
-                            else{
-                                termMap.put(afterCleaning.get(j),new ArrayList<String>());
-                                termMap.get(afterCleaning.get(j)).add(result);
-                            }*/
+
             }
             boolean inTitle = false;
             if (terms.get(i).getStr().contains("-")) {
@@ -224,10 +218,10 @@ public class Parser {
                 String[] strArray = terms.get(i).getStr().split("-");
                 ArrayList<Token> rangeList = new ArrayList<Token>();
                 for (int k = 0; k < strArray.length; k++) {
-                    if (title.contains(strArray[i])) {
+                    if (title.contains(strArray[k])) {
                         inTitle = true;
                     }
-                    rangeList.add(new Token(strArray[i], docID, inTitle));
+                    rangeList.add(new Token(strArray[k], docID, inTitle));
                 }
                 for (int j = 0; j < rangeList.size(); j++) {
                     if (rangeList.get(j).getStr().equals("")) {
@@ -639,13 +633,19 @@ public class Parser {
         if(termMap.containsKey(currTok)){
             if (termMap.get(currTok).containsKey(docID)) {
                 termMap.get(currTok).put(docID, termMap.get(currTok).remove(docID) + 1);
+                updateMaxTf(current, "", docID);
+                updateWordList(current, "");
             } else {
                 termMap.get(currTok).put(docID, 1);
+                updateMaxTf(current, "", docID);
+                updateWordList(current, "");
             }
         }
         else{
             termMap.put(currTok,new HashMap<>());
             termMap.get(currTok).put(docID,1);
+            updateMaxTf(current, "", docID);
+            updateWordList(current, "");
         }
 
     }
@@ -676,6 +676,30 @@ public class Parser {
             return String.format("%d", (long) d);
         else
             return String.format("%s", d);
+    }
+
+    public Map<Token, Map<String, Integer>> getTermMap() {
+        return termMap;
+    }
+
+    public void setTermMap(Map<Token, Map<String, Integer>> termMap) {
+        this.termMap = termMap;
+    }
+
+    public Map<String, Integer> getMaxTf() {
+        return maxTf;
+    }
+
+    public void setMaxTf(Map<String, Integer> maxTf) {
+        this.maxTf = maxTf;
+    }
+
+    public Map<String, Integer> getWordCounter() {
+        return wordCounter;
+    }
+
+    public void setWordCounter(Map<String, Integer> wordCounter) {
+        this.wordCounter = wordCounter;
     }
 
 

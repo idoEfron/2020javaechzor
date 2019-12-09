@@ -26,7 +26,6 @@ public class main {
                     ReadFile read = new ReadFile(SubFolder,p,index);
                     Thread t = new Thread(read);
                     t.start();
-                    //p.parseDocs(read.allFile,index);
                 }
             }
         }
