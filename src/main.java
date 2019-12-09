@@ -15,7 +15,6 @@ public class main {
         Parser p = new Parser(true);
         Scanner scanner = new Scanner(System.in);
         String folderPath = scanner.next();
-        Indexer index = new Indexer(true);
         File[] files1 = null;
         File folder = new File(folderPath);
         if (folder.isDirectory()) {
@@ -23,7 +22,7 @@ public class main {
             //System.out.println(listOfSubFolders.length);
             for (File SubFolder : listOfSubFolders) {
                 if (SubFolder.isDirectory()) {
-                    ReadFile read = new ReadFile(SubFolder,p,index);
+                    ReadFile read = new ReadFile(SubFolder,p);
                     Thread t = new Thread(read);
                     t.start();
                 }

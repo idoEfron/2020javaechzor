@@ -1,5 +1,4 @@
 
-import edu.stanford.nlp.util.Index;
 
 import java.io.*;/////
 import java.nio.charset.StandardCharsets;
@@ -15,13 +14,11 @@ public class ReadFile implements  Runnable{
     protected ArrayList<String> allFile;
     private File subFolder = null;
     private Parser p;
-    private Indexer i;
 
-    public ReadFile(File subFolder, Parser p,Indexer index) throws IOException {
+    public ReadFile(File subFolder, Parser p) throws IOException {
         allFile = new ArrayList<>();
         this.subFolder = subFolder;
         this.p = p;
-        i = index;
     }
     @Override
     public void run() {
@@ -47,7 +44,7 @@ public class ReadFile implements  Runnable{
         }
         System.out.println(counter);//delete
         try {
-            p.parseDocs(allFile,i);
+            p.parseDocs(allFile);
         } catch (ParseException e) {
             e.printStackTrace();
         } catch (IOException e) {
