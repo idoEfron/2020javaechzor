@@ -158,7 +158,7 @@ public class Parser {
      *
      * @param docList
      */
-    public void parseDocs(ArrayList<String> docList,Indexer index) throws ParseException, IOException {
+    public void parseDocs(ArrayList<String> docList) throws ParseException, IOException {
         String docNo = "";
         String title = "";
         for (int i = 0; i < docList.size(); i++) {
@@ -202,7 +202,8 @@ public class Parser {
             wordCounter.put(docNo, termsInDoc.size());
             termsInDoc.clear();
         }//bracket on the for on the doc list's
-        index.addBlock(this);
+        int k=0;
+       // index.addBlock(this);
     }
 
     private void handler(ArrayList<Token> terms, String docID, String title) throws ParseException {
@@ -219,15 +220,15 @@ public class Parser {
             }
             boolean inTitle = false;
             if (terms.get(i).getStr().contains("-")) {
-                termMap.put(terms.get(i), new HashMap<String, Integer>());
-                termMap.get(terms.get(i)).put(docID, 1);
+                //termMap.put(terms.get(i), new HashMap<String, Integer>());
+                //termMap.get(terms.get(i)).put(docID, 1);
                 String[] strArray = terms.get(i).getStr().split("-");
                 ArrayList<Token> rangeList = new ArrayList<Token>();
                 for (int k = 0; k < strArray.length; k++) {
-                    if (title.contains(strArray[i])) {
+                    if (title.contains(strArray[k])) {
                         inTitle = true;
                     }
-                    rangeList.add(new Token(strArray[i], docID, inTitle));
+                    rangeList.add(new Token(strArray[k], docID, inTitle));
                 }
                 for (int j = 0; j < rangeList.size(); j++) {
                     if (rangeList.get(j).getStr().equals("")) {
