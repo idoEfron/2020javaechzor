@@ -19,13 +19,13 @@ public class main {
         File folder = new File(folderPath);
         if (folder.isDirectory()) {
             File[] listOfSubFolders = folder.listFiles();
-            System.out.println(listOfSubFolders.length);
+            //System.out.println(listOfSubFolders.length);
             for (File SubFolder : listOfSubFolders) {
                 if (SubFolder.isDirectory()) {
                     ReadFile read = new ReadFile(SubFolder,p);
                     Thread t = new Thread(read);
                     t.start();
-                    p.parseDocs(read.allFile);
+                  //  p.parseDocs(read.allFile);
                 }
             }
         }
