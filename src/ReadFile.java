@@ -13,12 +13,14 @@ import java.util.Scanner;
 public class ReadFile implements  Runnable{
     protected ArrayList<String> allFile;
     private File subFolder = null;
-    private Parser p;
+    Indexer index;
+    boolean stem;
 
-    public ReadFile(File subFolder, Parser p) throws IOException {
+    public ReadFile(File subFolder,Indexer i,boolean stemming) throws IOException {
         allFile = new ArrayList<>();
         this.subFolder = subFolder;
-        this.p = p;
+        index=i;
+        stem = stemming;
     }
     @Override
     public void run() {
@@ -42,9 +44,9 @@ public class ReadFile implements  Runnable{
             allFile.addAll(Arrays.asList(splits));//
             counter = counter + splits.length - 1;//delete
         }
-        System.out.println(counter);//delete
         try {
-            p.parseDocs(allFile);
+            Parser p = new Parser(true);
+            p.parseDocs(allFile,index);
         } catch (ParseException e) {
             e.printStackTrace();
         } catch (IOException e) {
