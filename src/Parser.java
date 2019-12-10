@@ -552,7 +552,6 @@ public class Parser {
                 }
             } catch (NumberFormatException e) {
                 //term is not a date
-
             }
             /***lower/upper**////
             if (Character.isUpperCase(current.charAt(0))) {
