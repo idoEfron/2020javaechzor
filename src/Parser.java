@@ -159,14 +159,14 @@ public class Parser {
      *
      * @param docList
      */
-    public void parseDocs(ArrayList<String> docList) throws ParseException, IOException {
+    public void parseDocs(ArrayList<String> docList, Indexer index) throws ParseException, IOException {
         String docNo = "";
         String title = "";
         for (int i = 0; i < docList.size(); i++) {
             if (!docList.get(i).equals("\n") && !docList.get(i).equals("\n\n\n") && !docList.get(i).equals("\n\n\n\n") && !docList.get(i).equals("\n\n")) {
                 String docId = docList.get(i);
                 docNo = docId.substring(docId.indexOf("<DOCNO>") + 8, docId.indexOf("</DOCNO>") - 1);
-                title = docId.substring(docId.indexOf("<TI>") +10, docId.indexOf("</TI>"));
+                title = docId.substring(docId.indexOf("<TI>") + 10, docId.indexOf("</TI>"));
                 if (docId.contains("<TEXT>") && docId.contains("</TEXT>")) {
                     String txt = docId.substring(docId.indexOf("<TEXT>") + 7, docId.indexOf("</TEXT>") - 2);
                     String[] tokens = txt.split("\\s+|\n");
@@ -202,14 +202,14 @@ public class Parser {
             }
 
         }//bracket on the for on the doc list's
-        int k=0;
-       // index.addBlock(this);
+        int k = 0;
+        index.addBlock(this);
     }
 
     private void handler(ArrayList<Token> terms, String docID, String title) throws ParseException {
         for (int i = 0; i < terms.size(); i++) {
             if (!(numberHandler(terms, i, docID, title))) {
-                stringHandler(terms, i, docID,title);
+                stringHandler(terms, i, docID, title);
 
             }
             boolean inTitle = false;
@@ -336,122 +336,129 @@ public class Parser {
 
 
                 //checks if expression is date
-            if (Integer.parseInt(current) <= 31 && Integer.parseInt(current) >= 0 && months.containsKey(after)) {
+                if (Integer.parseInt(current) <= 31 && Integer.parseInt(current) >= 0 && months.containsKey(after)) {
                     putTerm(months.get(after) + "-", current, docID, title);
                 }
-            }catch (NumberFormatException e){
+            } catch (NumberFormatException e) {
 
             }
             //*******************dollars************************************************
-            if (after.equals("Dollars") ||
-                    current.contains("$") || (after.equals("billion") && afterTwo.equals("U.S")
-                    && afterThree.equals("dollars")) || (after.equals("million") && afterTwo.equals("U.S"))
-                    && afterThree.equals("dollars")) {
+            try{
+                if (after.equals("Dollars") ||
+                        current.contains("$") || (after.equals("billion") && afterTwo.equals("U.S")
+                        && afterThree.equals("dollars")) || (after.equals("million") && afterTwo.equals("U.S"))
+                        && afterThree.equals("dollars")) {
 
-                if (current.contains("$")) {
-                    current = current.substring(1);
-                    String numDub = current.replaceAll(",", "");
-                    if ((Double.parseDouble(numDub) < 1000000)) {
-                        if (!after.equals("million") && !after.equals("billion")) {
-                            putTerm(current, " Dollars", docID, title);
-                            return true;
-                        } else if (after.equals("million")) {
+                    if (current.contains("$")) {
+                        current = current.substring(1);
+                        String numDub = current.replaceAll(",", "");
+                        if ((Double.parseDouble(numDub) < 1000000)) {
+                            if (!after.equals("million") && !after.equals("billion")) {
+                                putTerm(current, " Dollars", docID, title);
+                                return true;
+                            } else if (after.equals("million")) {
+                                putTerm(current, " M Dollars", docID, title);
+                                return true;
+                            } else if (after.equals("billion")) {
+                                putTerm(current + "000", " M Dollars", docID, title);
+                                return true;
+                            }
+                        } else if (Double.parseDouble(numDub) >= 1000000) {
+                            current = format(current);
                             putTerm(current, " M Dollars", docID, title);
                             return true;
-                        } else if (after.equals("billion")) {
+                        }
+                    }////$$$$
+                    else if (after.equals("Dollars")) {
+                        if (current.contains("m")) {
+                            current = current.substring(0, current.length() - 1);
+                            putTerm(current, " M Dollars", docID, title);
+                            return true;
+                        } else if (current.contains("bn")) {
+                            current = current.substring(0, current.length() - 2);
                             putTerm(current + "000", " M Dollars", docID, title);
                             return true;
                         }
-                    } else if (Double.parseDouble(numDub) >= 1000000) {
-                        current = format(current);
-                        putTerm(current, " M Dollars", docID, title);
-                        return true;
-                    }
-                }////$$$$
-                else if (after.equals("Dollars")) {
-                    if (current.contains("m")) {
-                        current = current.substring(0, current.length() - 1);
-                        putTerm(current, " M Dollars", docID, title);
-                        return true;
-                    } else if (current.contains("bn")) {
-                        current = current.substring(0, current.length() - 2);
+                        String numDub = current.replaceAll(",", "");
+                        if (!current.contains("/") && Double.parseDouble(numDub) >= 1000000) {
+                            current = format(current);
+                            putTerm(current, " M Dollars", docID, title);
+                            return true;
+                        } else if (!current.contains("/") && Double.parseDouble(numDub) < 1000000) {
+                            putTerm(current, " Dollars", docID, title);
+                            return true;
+                        } else if (isNumber(before) && current.contains("/")) {
+                            putTerm(before + " " + current, " Dollars", docID, title);
+                            return true;
+                        }
+                    }////////*******dollars********///////////////////
+                    else if (isNumber(current) && after.equals("billion") && afterTwo.equals("U.S") && afterThree.equals("dollars")) {
                         putTerm(current + "000", " M Dollars", docID, title);
                         return true;
-                    }
-                    String numDub = current.replaceAll(",", "");
-                    if (!current.contains("/") && Double.parseDouble(numDub) >= 1000000) {
-                        current = format(current);
+                    } else if (isNumber(current) && after.equals("million") && afterTwo.equals("U.S") && afterThree.equals("dollars")) {
                         putTerm(current, " M Dollars", docID, title);
                         return true;
-                    } else if (!current.contains("/") && Double.parseDouble(numDub) < 1000000) {
-                        putTerm(current, " Dollars", docID, title);
-                        return true;
-                    } else if (isNumber(before) && current.contains("/")) {
-                        putTerm(before + " " + current, " Dollars", docID, title);
-                        return true;
                     }
-                }////////*******dollars********///////////////////
-                else if (isNumber(current) && after.equals("billion") && afterTwo.equals("U.S") && afterThree.equals("dollars")) {
-                    putTerm(current + "000", " M Dollars", docID, title);
-                    return true;
-                } else if (isNumber(current) && after.equals("million") && afterTwo.equals("U.S") && afterThree.equals("dollars")) {
-                    putTerm(current, " M Dollars", docID, title);
-                    return true;
-                }
-            }
+                    ///********************************************************************************
+                    //regular number
 
-            ///********************************************************************************
-            //regular number
-            else if (Double.parseDouble(num) >= 1000) {
-                int counter = 0;
-                for (int i = 0; i < current.length(); i++) {
-                    char theChar = current.charAt(i);
-                    if (Character.compare(theChar, ',') == 0) {
-                        counter++;
-                    }
-                }
-
-                // handle case of number without additional word (such as thousand, million and etc..)
-                if (counter > 0) {
-
-                    current = format(current);///*****////
-
-                    switch (counter) {
-                        case 1:
-                            current = current + "K";
-                            break;
-                        case 2:
-                            current = current + "M";
-                            break;
-                        case 3:
-                            current = current + "B";
-                            break;
-                        default:
-                            break;
-                    }
-                    Boolean inTitle = title.contains(current);
-                    Token currToken = new Token(current, docID, inTitle);
-                    if (termMap.containsKey(currToken)) {
-                        if (termMap.get(currToken).containsKey(docID)) {
-                            termMap.get(currToken).put(docID, termMap.get(currToken).remove(docID) + 1);
-                        } else {
-                            termMap.get(currToken).put(docID, 1);
-
+                    if (current.contains("/")) {
+                        putTerm(current, "", docID, title);
+                    } else if (Double.parseDouble(num) >= 1000) {
+                        int counter = 0;
+                        for (int i = 0; i < current.length(); i++) {
+                            char theChar = current.charAt(i);
+                            if (Character.compare(theChar, ',') == 0) {
+                                counter++;
+                            }
                         }
-                    } else {
-                        termMap.put(currToken, new HashMap<String, Integer>());
-                        termMap.get(currToken).put(docID, 1);
+
+                        // handle case of number without additional word (such as thousand, million and etc..)
+                        if (counter > 0) {
+
+                            current = format(current);///*****////
+
+                            switch (counter) {
+                                case 1:
+                                    current = current + "K";
+                                    break;
+                                case 2:
+                                    current = current + "M";
+                                    break;
+                                case 3:
+                                    current = current + "B";
+                                    break;
+                                default:
+                                    break;
+                            }
+                            Boolean inTitle = title.contains(current);
+                            Token currToken = new Token(current, docID, inTitle);
+                            if (termMap.containsKey(currToken)) {
+                                if (termMap.get(currToken).containsKey(docID)) {
+                                    termMap.get(currToken).put(docID, termMap.get(currToken).remove(docID) + 1);
+                                } else {
+                                    termMap.get(currToken).put(docID, 1);
+
+                                }
+                            } else {
+                                termMap.put(currToken, new HashMap<String, Integer>());
+                                termMap.get(currToken).put(docID, 1);
+                            }
+                        }
+                    } else if (Double.parseDouble(current) < 1000) {
+                        if (!after.contains("/")) {
+                            putTerm(current, "", docID, title);
+                        } else if (after.contains("/") && !afterTwo.equals("Dollars")) {
+                            putTerm(current, " " + after, docID, title);
+                            tokens.remove(index + 1);
+                        }
                     }
-                }
-            } else if (Double.parseDouble(current) < 1000) {
-                if (!after.contains("/")) {
-                    putTerm(current, "", docID, title);
-                } else if (after.contains("/") && !afterTwo.equals("Dollars")) {
-                    putTerm(current, " " + after, docID, title);
-                    tokens.remove(index + 1);
+                    return true;
                 }
             }
-            return true;
+            catch (NumberFormatException e){
+                //wasn't able to parse term to double
+            }
         }
         return false;
     }
@@ -488,10 +495,10 @@ public class Parser {
 
     public void updateMaxTf(String current, String character, String docID) {
         if (maxTf.containsKey(docID)) {
-            maxTf.put(docID, Math.max(termMap.get(new Token(current + character,docID,false)).get(docID), maxTf.get(docID)));
+            maxTf.put(docID, Math.max(termMap.get(new Token(current + character, docID, false)).get(docID), maxTf.get(docID)));
 
         } else {
-            maxTf.put(docID, termMap.get(new Token(current + character,docID,false)).get(docID));
+            maxTf.put(docID, termMap.get(new Token(current + character, docID, false)).get(docID));
         }
     }
 
@@ -502,7 +509,7 @@ public class Parser {
 
     }
 
-    public boolean stringHandler(ArrayList<Token> tokens, int index, String docID,String title) throws ParseException {
+    public boolean stringHandler(ArrayList<Token> tokens, int index, String docID, String title) throws ParseException {
 
         String before = "";
         String current = tokens.get(index).getStr();
@@ -521,7 +528,7 @@ public class Parser {
                 num = Integer.parseInt(after);
                 if (months.containsKey(current)) {
                     if (num > 0 && num <= 31) {
-                        Token currTok = new Token(months.get(current) + "-" + after,docID,title.contains(months.get(current) + "-" + after));
+                        Token currTok = new Token(months.get(current) + "-" + after, docID, title.contains(months.get(current) + "-" + after));
                         if (termMap.containsKey(currTok)) {
                             if (termMap.get(currTok).containsKey(docID)) {
                                 termMap.get(currTok).put(docID, termMap.get(currTok).get(docID) + 1);
@@ -535,7 +542,7 @@ public class Parser {
                         }
 
                     } else if (num > 1900 && isValidDate(after)) {
-                        Token currTok = new Token(after + "-" + months.get(current),docID,title.contains(after + "-" + months.get(current)));
+                        Token currTok = new Token(after + "-" + months.get(current), docID, title.contains(after + "-" + months.get(current)));
                         if (months.containsKey(currTok)) {
                             if (termMap.get(currTok).containsKey(docID)) {
                                 termMap.get(currTok).put(docID, termMap.get(currTok).get(docID) + 1);
@@ -555,27 +562,27 @@ public class Parser {
             }
             /***lower/upper**////
             if (Character.isUpperCase(current.charAt(0))) {
-                checkEntity(tokens, index, docID,title);
-                Token currTok = new Token(current.toLowerCase(),docID,title.contains(current.toLowerCase()));
-                if (termMap.containsKey(currTok)) {
-                    putTermString(current.toLowerCase(), docID, stemming,title.contains(current.toLowerCase()));
-                } else if (termMap.containsKey( new Token(current.toUpperCase(),docID,title.contains(current.toUpperCase())))) {
-                    putTermString(current.toUpperCase(), docID, stemming,title.contains(current.toUpperCase()));
+                checkEntity(tokens, index, docID, title);
+                Token currTok = new Token(current.toLowerCase(), docID, title.contains(current.toLowerCase()));
+                if (termMap.containsKey(currTok.getStr().toLowerCase())) {
+                    putTermString(current.toLowerCase(), docID, stemming, title.contains(current.toLowerCase()));
+                } else if (termMap.containsKey(new Token(current.toUpperCase(), docID, title.contains(current.toUpperCase())))) {
+                    putTermString(current.toUpperCase(), docID, stemming, title.contains(current.toUpperCase()));
                 } else {
-                    putTermString(current.toUpperCase(), docID, stemming,title.contains(current.toUpperCase()));
+                    putTermString(current.toUpperCase(), docID, stemming, title.contains(current.toUpperCase()));
                     return true;
                 }
             } else if (Character.isLowerCase(current.charAt(0))) {
-                if (termMap.containsKey(new Token(current.toUpperCase(),docID,title.contains(current.toUpperCase())))) {
-                    termMap.put(new Token(current.toLowerCase(),docID,title.contains(current.toLowerCase())), termMap.remove(new Token(current.toUpperCase(),docID,title.contains(current.toUpperCase())))); // remove uppercase key and update to lowercase key
-                    putTermString(current.toLowerCase(), docID, stemming,title.contains(current.toLowerCase()));
+                if (termMap.containsKey(new Token(current.toUpperCase(), docID, title.contains(current.toUpperCase())))) {
+                    termMap.put(new Token(current.toLowerCase(), docID, title.contains(current.toLowerCase())), termMap.remove(new Token(current.toUpperCase(), docID, title.contains(current.toUpperCase())))); // remove uppercase key and update to lowercase key
+                    putTermString(current.toLowerCase(), docID, stemming, title.contains(current.toLowerCase()));
                     return true;
                 } else {
-                    putTermString(current, docID, stemming ,title.contains(current));
+                    putTermString(current, docID, stemming, title.contains(current));
                     return true;
                 }
             } else {
-                putTermString(current, docID, stemming,title.contains(current));
+                putTermString(current, docID, stemming, title.contains(current));
                 return true;
             }
             return true;
@@ -584,10 +591,10 @@ public class Parser {
         return false;
     }
 
-    private void checkEntity(ArrayList<Token> tokens, int index, String docID,String title) {
+    private void checkEntity(ArrayList<Token> tokens, int index, String docID, String title) {
         String entity = "";
-        while (index < tokens.size() && Character.isUpperCase(tokens.get(index).getStr().charAt(0))) {
-            if ((index + 1) < tokens.size() && Character.isUpperCase(tokens.get(index + 1).getStr().charAt(0))) {
+        while (tokens.size() > 0 && index < tokens.size() && tokens.get(index).getLength()>0 && Character.isUpperCase(tokens.get(index).getStr().charAt(0))) {
+            if ((index + 1) < tokens.size() && tokens.get(index + 1).getLength() > 0 && Character.isUpperCase(tokens.get(index + 1).getStr().charAt(0))) {
                 entity = entity + tokens.get(index).getStr() + " ";
             } else {
                 entity = entity + tokens.get(index).getStr();
@@ -596,7 +603,7 @@ public class Parser {
             index++;
         }
 
-        if (tokens.size() >0 && entities.containsKey(tokens.get(index - 1))) {
+        if (tokens.size() > 0 && entities.containsKey(tokens.get(index - 1))) {
             if (entities.containsKey(entity)) {
                 if (entities.get(entity).containsKey(docID)) {
                     entities.get(entity).put(docID, entities.get(entity).get(docID) + 1);
@@ -613,8 +620,8 @@ public class Parser {
                 entities.put(entity.toUpperCase(), new HashMap<>());
                 entities.get(entity.toUpperCase()).put(docID, 1);
                 ArrayList<Token> entL = new ArrayList<>();
-                for(int i=0;i<entA.length-1;i++){
-                    entL.add(new Token(entA[i],docID,title.contains(entA[i])));
+                for (int i = 0; i < entA.length - 1; i++) {
+                    entL.add(new Token(entA[i], docID, title.contains(entA[i])));
                 }
                 entL.remove(entL.size() - 1);
                 checkEntity(entL, 0, docID, title);
@@ -622,15 +629,15 @@ public class Parser {
         }
     }
 
-    private void putTermString(String current, String docID, boolean stem,boolean inTitle) {
+    private void putTermString(String current, String docID, boolean stem, boolean inTitle) {
         if (stem == true) {
             porterStemmer porter = new porterStemmer();
             porter.setCurrent(current);
             porter.stem();
             current = porter.getCurrent();
         }
-        Token currTok = new Token(current,docID,inTitle);
-        if(termMap.containsKey(currTok)){
+        Token currTok = new Token(current, docID, inTitle);
+        if (termMap.containsKey(currTok)) {
             if (termMap.get(currTok).containsKey(docID)) {
                 termMap.get(currTok).put(docID, termMap.get(currTok).remove(docID) + 1);
                 updateMaxTf(current, "", docID);
@@ -640,10 +647,9 @@ public class Parser {
                 updateMaxTf(current, "", docID);
                 updateWordList(current, "");
             }
-        }
-        else{
-            termMap.put(currTok,new HashMap<>());
-            termMap.get(currTok).put(docID,1);
+        } else {
+            termMap.put(currTok, new HashMap<>());
+            termMap.get(currTok).put(docID, 1);
             updateMaxTf(current, "", docID);
             updateWordList(current, "");
         }

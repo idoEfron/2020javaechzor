@@ -13,11 +13,14 @@ public class Indexer {
     File directory;
     File subFolderTerms;
     File subFolderDocs;
+    Mutex mutex;
 
 
     public Indexer(boolean stem) throws IOException {
         termDictionary = new TreeMap<>();
         docDictionary = new TreeMap<>();
+
+        mutex = new Mutex();
 
         boolean corpus;
         boolean subFolder1;
@@ -48,33 +51,42 @@ public class Indexer {
     }
 
     public boolean addBlock(Parser p) throws IOException {
-        Mutex mutex = new Mutex();
         mutex.lock();
         boolean createdFile;
+        File file =null;
         for (Token tkn : p.getTermMap().keySet()) {
-            File file = new File(subFolderTerms.getPath() + "/" + tkn.getStr().hashCode() + ".txt");
-            if (!file.exists()) {
-                createdFile = file.createNewFile();
-                if (!createdFile) {
-                    throw new FilerException("cannot create file for indexer corpus");
+            try{
+                file = new File(subFolderTerms.getPath() ,tkn.getStr() + ".txt");
+                if (!file.exists()) {
+                    createdFile = file.createNewFile();
+                    termDictionary.put(tkn.getStr(), file.getPath());
                 }
+            } catch (FilerException fe){
+                throw new FilerException("cannot create file for indexer corpus: " +tkn.getStr());
+            } catch(IOException e){
+                System.out.println(tkn.getStr() +" from " +tkn.getDocId() +" failed");
+            }
 
-                termDictionary.put(tkn.getStr(), file.getPath());
+            PrintWriter writer =null;
+            try{
+                FileWriter filewriter = new FileWriter(file.getAbsoluteFile(), true);
+                BufferedWriter bw = new BufferedWriter(filewriter);
+                writer = new PrintWriter(filewriter);
+                for (Map.Entry<String, Integer> pair : p.getTermMap().get(tkn).entrySet()) {
+                    writer.println(pair.getKey() + ":" + pair.getValue());
+                }
+                writer.close();
             }
-            FileWriter filewriter = new FileWriter(file.getAbsoluteFile(), true);
-            BufferedWriter bw = new BufferedWriter(filewriter);
-            PrintWriter writer = new PrintWriter(filewriter);
-            for (Map.Entry<String, Integer> pair : p.getTermMap().get(tkn).entrySet()) {
-                writer.println(pair.getKey() + ":" + pair.getValue());
+            catch (FileNotFoundException e){
+                throw new FileNotFoundException("file not found: " +tkn.getStr() +" from doc: " +tkn.getDocId());
             }
-            writer.close();
         }
         for(String docID: p.getWordCounter().keySet()){
-            File file = new File(subFolderDocs.getPath() + "/" + docID + ".txt");
+            file = new File(subFolderDocs.getPath() + "/" + docID + ".txt");
             if (!file.exists()) {
                 createdFile = file.createNewFile();
                 if (!createdFile) {
-                    throw new FilerException("cannot create file for indexer corpus");
+                    throw new FilerException("cannot create file for indexer corpus" +docID);
                 }
 
                 docDictionary.put(docID, file.getPath());
