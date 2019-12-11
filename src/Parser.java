@@ -22,12 +22,12 @@ public class Parser {
     private boolean stemming;
     private Map<String, Integer> maxTf;
     private Map<String, Integer> wordCounter;
-    private List<String> termsInDoc;
+    private Set<String> termsInDoc;
 
 
     public Parser(boolean stem) throws IOException, ParseException {
         wordCounter = new HashMap<>();
-        termsInDoc = new ArrayList<>();
+        termsInDoc = new HashSet<>();
         stemming = stem;
         maxTf = new HashMap<>();
         termMap = new HashMap<>();
@@ -165,8 +165,13 @@ public class Parser {
         for (int i = 0; i < docList.size(); i++) {
             if (!docList.get(i).equals("\n") && !docList.get(i).equals("\n\n\n") && !docList.get(i).equals("\n\n\n\n") && !docList.get(i).equals("\n\n")) {
                 String docId = docList.get(i);
-                docNo = docId.substring(docId.indexOf("<DOCNO>") + 8, docId.indexOf("</DOCNO>") - 1);
-                title = docId.substring(docId.indexOf("<TI>") + 10, docId.indexOf("</TI>"));
+
+                try {
+                    docNo = docId.substring(docId.indexOf("<DOCNO>") + 8, docId.indexOf("</DOCNO>") - 1);
+                    title = docId.substring(docId.indexOf("<TI>") + 10, docId.indexOf("</TI>"));
+                } catch (Exception e) {
+                    System.out.println("problem in: "+docNo);
+                }
                 if (docId.contains("<TEXT>") && docId.contains("</TEXT>")) {
                     String txt = docId.substring(docId.indexOf("<TEXT>") + 7, docId.indexOf("</TEXT>") - 2);
                     String[] tokens = txt.split("\\s+|\n");
@@ -203,33 +208,35 @@ public class Parser {
 
         }//bracket on the for on the doc list's
         int k = 0;
-        index.addBlock(this);
+        //index.addBlock(this);
     }
 
     private void handler(ArrayList<Token> terms, String docID, String title) throws ParseException {
         for (int i = 0; i < terms.size(); i++) {
-            if (!(numberHandler(terms, i, docID, title))) {
-                stringHandler(terms, i, docID, title);
+            if(terms.get(i).getStr().length()>0){
+                if (!(numberHandler(terms, i, docID, title))) {
+                    stringHandler(terms, i, docID, title);
 
-            }
-            boolean inTitle = false;
-            if (terms.get(i).getStr().contains("-")) {
-                //termMap.put(terms.get(i), new HashMap<String, Integer>());
-                //termMap.get(terms.get(i)).put(docID, 1);
-                String[] strArray = terms.get(i).getStr().split("-");
-                ArrayList<Token> rangeList = new ArrayList<Token>();
-                for (int k = 0; k < strArray.length; k++) {
-                    if (title.contains(strArray[k])) {
-                        inTitle = true;
-                    }
-                    rangeList.add(new Token(strArray[k], docID, inTitle));
                 }
-                for (int j = 0; j < rangeList.size(); j++) {
-                    if (rangeList.get(j).getStr().equals("")) {
-                        rangeList.remove(j);
+                boolean inTitle = false;
+                if (terms.get(i).getStr().contains("-")) {
+                    //termMap.put(terms.get(i), new HashMap<String, Integer>());
+                    //termMap.get(terms.get(i)).put(docID, 1);
+                    String[] strArray = terms.get(i).getStr().split("-");
+                    ArrayList<Token> rangeList = new ArrayList<Token>();
+                    for (int k = 0; k < strArray.length; k++) {
+                        if (title.contains(strArray[k])) {
+                            inTitle = true;
+                        }
+                        rangeList.add(new Token(strArray[k], docID, inTitle));
                     }
+                    for (int j = 0; j < rangeList.size(); j++) {
+                        if (rangeList.get(j).getStr().equals("")) {
+                            rangeList.remove(j);
+                        }
+                    }
+                    handler(rangeList, docID, title);
                 }
-                handler(rangeList, docID, title);
             }
         }
     }
@@ -272,7 +279,7 @@ public class Parser {
     // *************change public to private***********
     //checks if the input number is indeed a number
     public boolean isNumber(String str) throws ParseException {
-        if (Character.isDigit(str.charAt(0))) {
+        if (str.length()>0 && Character.isDigit(str.charAt(0))) {
             Pattern pattern = Pattern.compile("\\d+(,\\d+)*(\\.\\d+)?");
             if (str.matches("\\d+(,\\d+)*(\\.\\d+)?")) {
 
