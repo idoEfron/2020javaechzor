@@ -209,9 +209,9 @@ public class Parser {
             }
 
         }//bracket on the for on the doc list's
-        /*for(Token tkn : termMap.keySet()){
+        for(Token tkn : termMap.keySet()){
             System.out.println(tkn.getStr());
-        }*/
+        }
         int k = 0;
         index.addBlock(this);
     }
@@ -411,6 +411,7 @@ public class Parser {
                         putTerm(current, " M Dollars", docID, title);
                         return true;
                     }
+                }
                     ///********************************************************************************
                     //regular number
 
@@ -448,25 +449,29 @@ public class Parser {
                             if (termMap.containsKey(currToken)) {
                                 if (termMap.get(currToken).containsKey(docID)) {
                                     termMap.get(currToken).put(docID, termMap.get(currToken).remove(docID) + 1);
+                                    return true;
+
                                 } else {
                                     termMap.get(currToken).put(docID, 1);
+                                    return true;
 
                                 }
                             } else {
                                 termMap.put(currToken, new HashMap<String, Integer>());
                                 termMap.get(currToken).put(docID, 1);
+                                return true;
                             }
                         }
                     } else if (Double.parseDouble(current) < 1000) {
                         if (!after.contains("/")) {
                             putTerm(current, "", docID, title);
+                            return true;
                         } else if (after.contains("/") && !afterTwo.equals("Dollars")) {
                             putTerm(current, " " + after, docID, title);
                             tokens.remove(index + 1);
+                            return true;
                         }
                     }
-                    return true;
-                }
             }
             catch (NumberFormatException e){
                 //wasn't able to parse term to double
@@ -598,7 +603,6 @@ public class Parser {
                 putTermString(current, docID, stemming, title.contains(current));
                 return true;
             }
-            return true;
         }
 
         return false;
