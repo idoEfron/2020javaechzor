@@ -11,8 +11,7 @@ public class Token {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Token token = (Token) o;
-        return Objects.equals(str, token.str) &&
-                Objects.equals(docId, token.docId);
+        return Objects.equals(this.str, token.str);
     }
 
     public void setStr(String str) {
@@ -33,7 +32,7 @@ public class Token {
 
     @Override
     public int hashCode() {
-        return Objects.hash(str);
+        return this.str.hashCode();
     }
 
     public Token(String str, String docId, boolean inTitle) {
