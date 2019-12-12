@@ -56,31 +56,22 @@ public class Indexer {
         File file = null;
         Set<Token> tknSet = p.getTermMap().keySet();
         long startTime = System.currentTimeMillis();
-        File currentFile = new File("./resources/StemmedCorpus/Terms/","terms.txt");
+        File currentFile = new File("./resources/StemmedCorpus/Terms/");
         currentFile.createNewFile();
         for (Token tkn : tknSet) {
-            /*if (new File(currentFolder.getPath()).list().length == 200) {
-                folder++;
-                currentFolder = new File("./resources/StemmedCorpus/Terms/" + folder);
-                currentFolder.mkdir();
-            }*/
             PrintWriter writer = null;
-            if (!termDictionary.containsKey(tkn.getStr())) {
-                //file = new File(subFolderTerms.getPath(), tkn.getStr().hashCode() + ".txt");
-                //createdFile = file.createNewFile();
-                termDictionary.put(tkn.getStr(), currentFile.getPath());
-                FileWriter filewriter = new FileWriter(termDictionary.get(tkn.getStr()), true);
-                BufferedWriter bw = new BufferedWriter(filewriter);
-                writer = new PrintWriter(filewriter);
-                writer.print(tkn.getStr() +": ");
-            }
-            /*try {
 
+            try {
+                if (!termDictionary.containsKey(tkn.getStr())) {
+                    file = new File(subFolderTerms.getPath(), tkn.getStr().hashCode() + ".txt");
+                    createdFile = file.createNewFile();
+                    termDictionary.put(tkn.getStr(), file.getPath());
+                }
             } catch (FilerException fe) {
                 throw new FilerException("cannot create file for indexer corpus: " + tkn.getStr());
             } catch (IOException e) {
                 System.out.println(tkn.getStr() + " from " + tkn.getDocId() + " failed");
-            }*/
+            }
 
             try {
                 FileWriter filewriter = new FileWriter(termDictionary.get(tkn.getStr()), true);
@@ -100,7 +91,7 @@ public class Indexer {
 
         long endTime = System.currentTimeMillis();
         long totalTime = endTime - startTime;
-        System.out.print(totalTime + " , ");
+        System.out.print("page indexed in: "+totalTime + " , ");
 
         for (String docID : p.getWordCounter().keySet()) {
             file = new File(subFolderDocs.getPath() + "/" + docID + ".txt");

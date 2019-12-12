@@ -159,12 +159,12 @@ public class Parser {
      *
      * @param docList
      */
-    public void parseDocs(ArrayList<String> docList, Indexer index) throws ParseException, IOException {
+    public void parseDocs(String [] docList, Indexer index) throws ParseException, IOException {
         String docNo = "";
         String title = "";
-        for (int i = 0; i < docList.size(); i++) {
-            if (!docList.get(i).equals("\n") && !docList.get(i).equals("\n\n\n") && !docList.get(i).equals("\n\n\n\n") && !docList.get(i).equals("\n\n")) {
-                String docId = docList.get(i);
+        for (int i = 0; i < docList.length; i++) {
+            if (!docList[i].equals("\n") && !docList[i].equals("\n\n\n") && !docList[i].equals("\n\n\n\n") && !docList[i].equals("\n\n")) {
+                String docId = docList[i];
 
                 try {
                     docNo = docId.substring(docId.indexOf("<DOCNO>") + 8, docId.indexOf("</DOCNO>") - 1);
@@ -176,6 +176,8 @@ public class Parser {
                 }
                 if (docId.contains("<TEXT>") && docId.contains("</TEXT>")) {
                     String txt = docId.substring(docId.indexOf("<TEXT>") + 7, docId.indexOf("</TEXT>") - 2);
+                    txt= txt.replaceAll("\\<.*?\\>", " ");
+                    txt= txt.replace("--"," ");
                     String[] tokens = txt.split("\\s+|\n");
                     ArrayList<Token> afterCleaning = new ArrayList<>();
                     for (int y = 0; y < tokens.length; y++) {
@@ -229,8 +231,11 @@ public class Parser {
             }
 
         }//bracket on the for on the doc list's
+        for(Token tkn : termMap.keySet()){
+            System.out.println(tkn.getStr());
+        }
         int k = 0;
-     //   index.addBlock(this);
+        index.addBlock(this);
     }
 
     private boolean isNumric(String currToken) {
@@ -658,28 +663,18 @@ public class Parser {
             index++;
         }
 
-        if (tokens.size() > 0 && entities.containsKey(tokens.get(index - 1))) {
-            if (entities.containsKey(entity)) {
-                if (entities.get(entity).containsKey(docID)) {
-                    entities.get(entity).put(docID, entities.get(entity).get(docID) + 1);
+        if (tokens.size() > 0) {
+            if (entities.containsKey(entity.toUpperCase())) {
+                if (entities.get(entity.toUpperCase()).containsKey(docID)) {
+                    entities.get(entity.toUpperCase()).put(docID, entities.get(entity.toUpperCase()).get(docID) + 1);
                 } else {
-                    entities.get(entity).put(docID, 1);
+                    entities.get(entity.toUpperCase()).put(docID, 1);
                 }
             } else {
-                entities.put(entity.toUpperCase(), new HashMap<>());
-                entities.get(entity).put(docID, 1);
-            }
-        } else {
-            String[] entA = entity.split("[- ]");
-            if (entA.length > 1) {
-                entities.put(entity.toUpperCase(), new HashMap<>());
-                entities.get(entity.toUpperCase()).put(docID, 1);
-                ArrayList<Token> entL = new ArrayList<>();
-                for (int i = 0; i < entA.length - 1; i++) {
-                    entL.add(new Token(entA[i], docID, title.contains(entA[i])));
+                if(entity.split("[-:, ]").length>1){
+                    entities.put(entity.toUpperCase(), new HashMap<>());
+                    entities.get(entity.toUpperCase()).put(docID, 1);
                 }
-                entL.remove(entL.size() - 1);
-                checkEntity(entL, 0, docID, title);
             }
         }
     }

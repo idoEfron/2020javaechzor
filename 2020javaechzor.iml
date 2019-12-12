@@ -21,18 +21,5 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="file://$MODULE_DIR$/../stanford-corenlp-full-2018-10-05" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="file://$MODULE_DIR$/../stanford-corenlp-full-2018-10-05" />
-        </SOURCES>
-        <jarDirectory url="file://$MODULE_DIR$/../stanford-corenlp-full-2018-10-05" recursive="false" />
-        <jarDirectory url="file://$MODULE_DIR$/../stanford-corenlp-full-2018-10-05" recursive="false" type="SOURCES" />
-      </library>
-    </orderEntry>
   </component>
 </module>
