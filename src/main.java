@@ -1,8 +1,6 @@
 import java.io.File;
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,13 +34,14 @@ public class main {
                     //read.run();
                 }
             }
+            executor.shutdown();
             while (!executor.isTerminated()) {
             }
-            executor.shutdown();
             long endTime = System.currentTimeMillis();
             long totalTime = endTime - startTime;
             System.out.print(totalTime + " , ");
         }
+        scanner.close();
         //Indexer index = new Indexer(true);
     }
 }

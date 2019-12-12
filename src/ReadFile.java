@@ -13,6 +13,7 @@ import java.util.Scanner;
 public class ReadFile implements  Runnable{
     protected ArrayList<String> allFile;
     private File subFolder = null;
+    private String[] splits;
     Indexer index;
     boolean stem;
 
@@ -40,13 +41,13 @@ public class ReadFile implements  Runnable{
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            String[] splits = text.split("</DOC>");
+            splits = text.split("</DOC>");
             allFile.addAll(Arrays.asList(splits));//
             counter = counter + splits.length - 1;//delete
         }
         try {
             Parser p = new Parser(true);
-            p.parseDocs(allFile,index);
+            p.parseDocs(splits,index);
         } catch (ParseException e) {
             e.printStackTrace();
         } catch (IOException e) {
