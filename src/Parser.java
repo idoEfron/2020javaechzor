@@ -168,7 +168,9 @@ public class Parser {
 
                 try {
                     docNo = docId.substring(docId.indexOf("<DOCNO>") + 8, docId.indexOf("</DOCNO>") - 1);
-                    title = docId.substring(docId.indexOf("<TI>") + 10, docId.indexOf("</TI>"));
+                    if(docId.contains("<TI>")) {
+                        title = docId.substring(docId.indexOf("<TI>") + 10, docId.indexOf("</TI>"));
+                    }
                 } catch (Exception e) {
                     System.out.println("problem in: "+docNo);
                 }
@@ -176,6 +178,7 @@ public class Parser {
                     String txt = docId.substring(docId.indexOf("<TEXT>") + 7, docId.indexOf("</TEXT>") - 2);
                     txt= txt.replaceAll("\\<.*?\\>", " ");
                     txt= txt.replace("--"," ");
+                    txt= txt.replaceAll("\\p{P}"," ");
                     String[] tokens = txt.split("\\s+|\n");
                     ArrayList<Token> afterCleaning = new ArrayList<>();
                     for (int y = 0; y < tokens.length; y++) {
@@ -194,6 +197,26 @@ public class Parser {
                                 }//token,token.length(),docList.get(i).indexOf(token)
                             }
 
+                        } else if (!currToken.matches("[a-zA-Z0-9]*")) {
+                            if (isNumric(currToken) == false) {
+                                String[] afterRemoving = currToken.split("\\W");
+                                if(afterRemoving.length>1) {
+                                    if (afterRemoving.length == 2 && (isNumric(afterRemoving[0]) && isNumric(afterRemoving[1])) ||
+                                            (isNumric(afterRemoving[1]) && afterRemoving[0].equals("") && afterRemoving[1].length() + 1 == currToken.length())) {
+                                        afterCleaning.add(new Token(currToken, docNo, title.contains(currToken)));
+                                    } else {
+                                        for (int j = 0; j < afterRemoving.length; j++) {
+                                            token = cleanToken(afterRemoving[j]);
+                                            if (token.length() > 0) {
+                                                afterCleaning.add(new Token(token, docNo, title.contains(token)));
+                                            }//token,token.length(),docList.get(i).indexOf(token)
+                                        }
+                                    }
+                                }else if (afterRemoving.length==1){
+                                    token = cleanToken(afterRemoving[0]);
+                                    afterCleaning.add(new Token(token, docNo, title.contains(token)));
+                                }
+                            }
                         } else {
                             token = cleanToken(tokens[y]);
                             if (token.length() > 0) {
@@ -209,11 +232,20 @@ public class Parser {
             }
 
         }//bracket on the for on the doc list's
-        for(Token tkn : termMap.keySet()){
+        /*for(Token tkn : termMap.keySet()){
             System.out.println(tkn.getStr());
-        }
+        }*/
         int k = 0;
         index.addBlock(this);
+    }
+
+    private boolean isNumric(String currToken) {
+        try {
+            Double.parseDouble(currToken);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     private void handler(ArrayList<Token> terms, String docID, String title) throws ParseException {
@@ -235,11 +267,11 @@ public class Parser {
                         }
                         rangeList.add(new Token(strArray[k], docID, inTitle));
                     }
-                    for (int j = 0; j < rangeList.size(); j++) {
+                    /*for (int j = 0; j < rangeList.size(); j++) {
                         if (rangeList.get(j).getStr().equals("")) {
                             rangeList.remove(j);
                         }
-                    }
+                    }*/
                     handler(rangeList, docID, title);
                 }
             }
@@ -355,7 +387,7 @@ public class Parser {
 
             }
             //*******************dollars************************************************
-            try{
+            try {
                 if (after.equals("Dollars") ||
                         current.contains("$") || (after.equals("billion") && afterTwo.equals("U.S")
                         && afterThree.equals("dollars")) || (after.equals("million") && afterTwo.equals("U.S"))
@@ -576,7 +608,6 @@ public class Parser {
                 }
             } catch (NumberFormatException e) {
                 //term is not a date
-
             }
             /***lower/upper**////
             if (Character.isUpperCase(current.charAt(0))) {
@@ -599,18 +630,36 @@ public class Parser {
                     putTermString(current, docID, stemming, title.contains(current));
                     return true;
                 }
-            } else {
+            } /*else {
                 putTermString(current, docID, stemming, title.contains(current));
+                return true;
+            }*/
+        }
+        if (stopwords.contains(current.toLowerCase()) && Character.isUpperCase(current.charAt(0))) {
+            String newStopWord = current;
+            boolean flag = false;
+            int stopIndex = index;
+            while (stopIndex + 1 < tokens.size() && !flag) {
+                stopIndex = stopIndex + 1;
+                String afterStop = tokens.get(stopIndex).getStr();
+                if (Character.isUpperCase(afterStop.charAt(0))) {
+                    newStopWord = newStopWord + " " + afterStop;
+                } else {
+                    flag = true;
+                }
+            }
+            if (!newStopWord.equals(current)) {
+                putTermString(newStopWord, docID, stemming, title.contains(newStopWord));
                 return true;
             }
         }
-
         return false;
     }
 
+
     private void checkEntity(ArrayList<Token> tokens, int index, String docID, String title) {
         String entity = "";
-        while (tokens.size() > 0 && index < tokens.size() && tokens.get(index).getLength()>0 && Character.isUpperCase(tokens.get(index).getStr().charAt(0))) {
+        while (tokens.size() > 0 && index < tokens.size() && tokens.get(index).getLength() > 0 && Character.isUpperCase(tokens.get(index).getStr().charAt(0))) {
             if ((index + 1) < tokens.size() && tokens.get(index + 1).getLength() > 0 && Character.isUpperCase(tokens.get(index + 1).getStr().charAt(0))) {
                 entity = entity + tokens.get(index).getStr() + " ";
             } else {
@@ -654,7 +703,7 @@ public class Parser {
                 updateMaxTf(current, "", docID);
                 updateWordList(current, "");
             }
-        } else {
+        } else if(current.length()>1) {
             termMap.put(currTok, new HashMap<>());
             termMap.get(currTok).put(docID, 1);
             updateMaxTf(current, "", docID);

@@ -25,15 +25,19 @@ public class ReadFile implements  Runnable{
     }
     @Override
     public void run() {
+        Scanner file3 = null;
         int counter = 0;//delete
         File[] files1 = null;
         files1 = subFolder.listFiles();
         for (File file2 : files1) {
             String TxtPaths = file2.getPath();
             try {
-                Scanner file3 = new Scanner(file2);
+                file3 = new Scanner(file2);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
+            }
+            finally {
+                file3.close();
             }
             String text = null;
             try {
