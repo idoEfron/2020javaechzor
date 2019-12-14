@@ -113,7 +113,7 @@ public class Parser {
             put("milli-ampere", "mA");
             put("Milli-ampere", "mA");
             put("milliampere".toUpperCase(), "mA");
-            put("Milli-ampere".toUpperCase(), "mA");
+            put("Milli- ampere".toUpperCase(), "mA");
             put("Watt", "W");
             put("watt", "W");
             put("watt".toUpperCase(), "W");
@@ -196,12 +196,16 @@ public class Parser {
                                 }//token,token.length(),docList.get(i).indexOf(token)
                             }
 
-                        } else if (!currToken.matches("[a-zA-Z0-9]*")) {
+                        }
+
+                        else if ( !currToken.contains("U.S")&&!isNumber(currToken)&&!(currToken.contains("%")||currToken.contains("$") )
+                                &&!currToken.matches("[a-zA-Z0-9]a-zA-Z0-9]*")) {
                             if (isNumric(currToken) == false) {
                                 String[] afterRemoving = currToken.split("\\W");
                                 if(afterRemoving.length>1) {
                                     if (afterRemoving.length == 2 && (isNumric(afterRemoving[0]) && isNumric(afterRemoving[1])) ||
-                                            (isNumric(afterRemoving[1]) && afterRemoving[0].equals("") && afterRemoving[1].length() + 1 == currToken.length())) {
+                                            (isNumric(afterRemoving[1]) && afterRemoving[0].equals("") && afterRemoving[1].length() + 1 == currToken.length())||
+                                            (isNumric(afterRemoving[0])&&afterRemoving[1].contains("m"))) {
                                         afterCleaning.add(new Token(currToken, docNo, title.contains(currToken)));
                                     } else {
                                         for (int j = 0; j < afterRemoving.length; j++) {
@@ -216,7 +220,9 @@ public class Parser {
                                     afterCleaning.add(new Token(token, docNo, title.contains(token)));
                                 }
                             }
-                        } else {
+                        }
+
+                        else {
                             token = cleanToken(tokens[y]);
                             if (token.length() > 0) {
                                 afterCleaning.add(new Token(token, docNo, title.contains(token)));
@@ -434,7 +440,8 @@ public class Parser {
                             putTerm(before + " " + current, " Dollars", docID, title);
                             return true;
                         }
-                    }////////*******dollars********///////////////////
+                    }
+                    ////////*******dollars********///////////////////
                     else if (isNumber(current) && after.equals("billion") && afterTwo.equals("U.S") && afterThree.equals("dollars")) {
                         putTerm(current + "000", " M Dollars", docID, title);
                         return true;
@@ -442,6 +449,7 @@ public class Parser {
                         putTerm(current, " M Dollars", docID, title);
                         return true;
                     }
+                }
                     ///********************************************************************************
                     //regular number
 
@@ -497,7 +505,6 @@ public class Parser {
                         }
                     }
                     return true;
-                }
             } catch (NumberFormatException e) {
                 //wasn't able to parse term to double
             }
