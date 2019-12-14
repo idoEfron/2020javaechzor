@@ -23,9 +23,11 @@ public class Parser {
     private Map<String, Integer> maxTf;
     private Map<String, Integer> wordCounter;
     private Set<String> termsInDoc;
+    ReadFile rf;
 
 
-    public Parser(boolean stem) throws IOException, ParseException {
+    public Parser(boolean stem,ReadFile readFile) throws IOException, ParseException {
+        rf=readFile;
         wordCounter = new HashMap<>();
         termsInDoc = new HashSet<>();
         stemming = stem;
@@ -175,7 +177,13 @@ public class Parser {
                     System.out.println("problem in: "+docNo);
                 }
                 if (docId.contains("<TEXT>") && docId.contains("</TEXT>")) {
-                    String txt = docId.substring(docId.indexOf("<TEXT>") + 7, docId.indexOf("</TEXT>") - 2);
+                    String txt="";
+                    try{
+                        txt = docId.substring(docId.indexOf("<TEXT>") + 7, docId.indexOf("</TEXT>") - 2);
+                    }
+                    catch(StringIndexOutOfBoundsException e){
+                        System.out.println("problem in file: "+docNo );
+                    }
                     txt= txt.replaceAll("\\<.*?\\>", " ");
                     txt= txt.replace("--"," ");
                     txt= txt.replaceAll("\\p{P}"," ");
@@ -193,7 +201,7 @@ public class Parser {
                             for (int j = 0; j < afterRemoving.length; j++) {
                                 token = cleanToken(afterRemoving[j]);
                                 if (token.length() > 0) {
-                                    afterCleaning.add(new Token(token, docNo, title.contains(token)));
+                                    afterCleaning.add(new Token(token, docNo, title.contains(token),rf.getSubFolder().getName()));
                                 }//token,token.length(),docList.get(i).indexOf(token)
                             }
 
@@ -203,24 +211,24 @@ public class Parser {
                                 if(afterRemoving.length>1) {
                                     if (afterRemoving.length == 2 && (isNumric(afterRemoving[0]) && isNumric(afterRemoving[1])) ||
                                             (isNumric(afterRemoving[1]) && afterRemoving[0].equals("") && afterRemoving[1].length() + 1 == currToken.length())) {
-                                        afterCleaning.add(new Token(currToken, docNo, title.contains(currToken)));
+                                        afterCleaning.add(new Token(currToken, docNo, title.contains(currToken),rf.getSubFolder().getName()));
                                     } else {
                                         for (int j = 0; j < afterRemoving.length; j++) {
                                             token = cleanToken(afterRemoving[j]);
                                             if (token.length() > 0) {
-                                                afterCleaning.add(new Token(token, docNo, title.contains(token)));
+                                                afterCleaning.add(new Token(token, docNo, title.contains(token),rf.getSubFolder().getName()));
                                             }//token,token.length(),docList.get(i).indexOf(token)
                                         }
                                     }
                                 }else if (afterRemoving.length==1){
                                     token = cleanToken(afterRemoving[0]);
-                                    afterCleaning.add(new Token(token, docNo, title.contains(token)));
+                                    afterCleaning.add(new Token(token, docNo, title.contains(token),rf.getSubFolder().getName()));
                                 }
                             }
                         } else {
                             token = cleanToken(tokens[y]);
                             if (token.length() > 0) {
-                                afterCleaning.add(new Token(token, docNo, title.contains(token)));
+                                afterCleaning.add(new Token(token, docNo, title.contains(token),rf.getSubFolder().getName()));
                             }
                         }//bracket on the else
                     }//for on the tokens after split
@@ -265,7 +273,7 @@ public class Parser {
                         if (title.contains(strArray[k])) {
                             inTitle = true;
                         }
-                        rangeList.add(new Token(strArray[k], docID, inTitle));
+                        rangeList.add(new Token(strArray[k], docID, inTitle,rf.getSubFolder().getName()));
                     }
                     /*for (int j = 0; j < rangeList.size(); j++) {
                         if (rangeList.get(j).getStr().equals("")) {
@@ -477,7 +485,7 @@ public class Parser {
                                     break;
                             }
                             Boolean inTitle = title.contains(current);
-                            Token currToken = new Token(current, docID, inTitle);
+                            Token currToken = new Token(current, docID, inTitle,rf.getSubFolder().getName());
                             if (termMap.containsKey(currToken)) {
                                 if (termMap.get(currToken).containsKey(docID)) {
                                     termMap.get(currToken).put(docID, termMap.get(currToken).remove(docID) + 1);
@@ -521,7 +529,7 @@ public class Parser {
      */
     private void putTerm(String current, String character, String docId, String title) {
         boolean inTitle = title.contains(current + character);
-        Token currToken = new Token(current + character, docId, inTitle);
+        Token currToken = new Token(current + character, docId, inTitle,rf.getSubFolder().getName());
         if (termMap.containsKey(currToken)) {
             if (termMap.get(currToken).containsKey(docId)) {
                 termMap.get(currToken).put(docId, termMap.get(currToken).remove(docId) + 1);
@@ -544,10 +552,10 @@ public class Parser {
 
     public void updateMaxTf(String current, String character, String docID) {
         if (maxTf.containsKey(docID)) {
-            maxTf.put(docID, Math.max(termMap.get(new Token(current + character, docID, false)).get(docID), maxTf.get(docID)));
+            maxTf.put(docID, Math.max(termMap.get(new Token(current + character, docID, false,rf.getSubFolder().getName())).get(docID), maxTf.get(docID)));
 
         } else {
-            maxTf.put(docID, termMap.get(new Token(current + character, docID, false)).get(docID));
+            maxTf.put(docID, termMap.get(new Token(current + character, docID, false,rf.getSubFolder().getName())).get(docID));
         }
     }
 
@@ -577,7 +585,7 @@ public class Parser {
                 num = Integer.parseInt(after);
                 if (months.containsKey(current)) {
                     if (num > 0 && num <= 31) {
-                        Token currTok = new Token(months.get(current) + "-" + after, docID, title.contains(months.get(current) + "-" + after));
+                        Token currTok = new Token(months.get(current) + "-" + after, docID, title.contains(months.get(current) + "-" + after),rf.getSubFolder().getName());
                         if (termMap.containsKey(currTok)) {
                             if (termMap.get(currTok).containsKey(docID)) {
                                 termMap.get(currTok).put(docID, termMap.get(currTok).get(docID) + 1);
@@ -591,7 +599,7 @@ public class Parser {
                         }
 
                     } else if (num > 1900 && isValidDate(after)) {
-                        Token currTok = new Token(after + "-" + months.get(current), docID, title.contains(after + "-" + months.get(current)));
+                        Token currTok = new Token(after + "-" + months.get(current), docID, title.contains(after + "-" + months.get(current)),rf.getSubFolder().getName());
                         if (months.containsKey(currTok)) {
                             if (termMap.get(currTok).containsKey(docID)) {
                                 termMap.get(currTok).put(docID, termMap.get(currTok).get(docID) + 1);
@@ -612,18 +620,18 @@ public class Parser {
             /***lower/upper**////
             if (Character.isUpperCase(current.charAt(0))) {
                 checkEntity(tokens, index, docID, title);
-                Token currTok = new Token(current.toLowerCase(), docID, title.contains(current.toLowerCase()));
+                Token currTok = new Token(current.toLowerCase(), docID, title.contains(current.toLowerCase()),rf.getSubFolder().getName());
                 if (termMap.containsKey(currTok.getStr().toLowerCase())) {
                     putTermString(current.toLowerCase(), docID, stemming, title.contains(current.toLowerCase()));
-                } else if (termMap.containsKey(new Token(current.toUpperCase(), docID, title.contains(current.toUpperCase())))) {
+                } else if (termMap.containsKey(new Token(current.toUpperCase(), docID, title.contains(current.toUpperCase()),rf.getSubFolder().getName()))) {
                     putTermString(current.toUpperCase(), docID, stemming, title.contains(current.toUpperCase()));
                 } else {
                     putTermString(current.toUpperCase(), docID, stemming, title.contains(current.toUpperCase()));
                     return true;
                 }
             } else if (Character.isLowerCase(current.charAt(0))) {
-                if (termMap.containsKey(new Token(current.toUpperCase(), docID, title.contains(current.toUpperCase())))) {
-                    termMap.put(new Token(current.toLowerCase(), docID, title.contains(current.toLowerCase())), termMap.remove(new Token(current.toUpperCase(), docID, title.contains(current.toUpperCase())))); // remove uppercase key and update to lowercase key
+                if (termMap.containsKey(new Token(current.toUpperCase(), docID, title.contains(current.toUpperCase()),rf.getSubFolder().getName()))) {
+                    termMap.put(new Token(current.toLowerCase(), docID, title.contains(current.toLowerCase()),rf.getSubFolder().getName()), termMap.remove(new Token(current.toUpperCase(), docID, title.contains(current.toUpperCase()),rf.getSubFolder().getName()))); // remove uppercase key and update to lowercase key
                     putTermString(current.toLowerCase(), docID, stemming, title.contains(current.toLowerCase()));
                     return true;
                 } else {
@@ -692,7 +700,7 @@ public class Parser {
             porter.stem();
             current = porter.getCurrent();
         }
-        Token currTok = new Token(current, docID, inTitle);
+        Token currTok = new Token(current, docID, inTitle,rf.getSubFolder().getName());
         if (termMap.containsKey(currTok)) {
             if (termMap.get(currTok).containsKey(docID)) {
                 termMap.get(currTok).put(docID, termMap.get(currTok).remove(docID) + 1);

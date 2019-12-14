@@ -14,51 +14,53 @@ public class main {
         System.out.println("Enter the path to search");
         Scanner scanner = new Scanner(System.in);
         String folderPath = scanner.next();
+        scanner.close();
         File[] files1 = null;
         boolean stemming = true;
         File folder = new File(folderPath);
         //Indexer indexer= new Indexer(true);
-        ExecutorService executor= Executors.newFixedThreadPool(4);
+        ExecutorService executor= Executors.newFixedThreadPool(5);
 
+        File subFolderTerms= null;
         boolean corpus;
         boolean subFolder1;
         boolean subFolder2;
         if (stemming) {
 
-            File directory = new File("./resources/StemmedCorpus");
+            File directory = new File("./StemmedCorpus");
             corpus = directory.mkdir();
-            File subFolderTerms = new File("./resources/StemmedCorpus/Terms");
+            subFolderTerms = new File("./StemmedCorpus/Terms");
             subFolder1 = subFolderTerms.mkdir();
-            File subFolderDocs = new File("./resources/StemmedCorpus/Docs");
+            File subFolderDocs = new File("./StemmedCorpus/Docs");
             subFolder2 = subFolderDocs.mkdir();
             for(char i = 'a' ; i<='z' ; i++){
-                File Tfolder = new File("./resources/StemmedCorpus/Terms/" +i);
+                File Tfolder = new File("./StemmedCorpus/Terms/" +i);
                 Tfolder.mkdir();
-                File merged = new File(folder.getPath(),i+"_merged.txt");
+                File merged = new File(subFolderTerms.getPath()+"/"+i,i+"_merged.txt");
                 merged.createNewFile();
             }
-            File Sfolder = new File("./resources/StemmedCorpus/Terms/special");
+            File Sfolder = new File("./StemmedCorpus/Terms/special");
             Sfolder.mkdir();
-            File merged = new File(folder.getPath(),"special"+"_merged.txt");
+            File merged = new File(subFolderTerms.getPath()+"/special","special"+"_merged.txt");
             merged.createNewFile();
 
         } else {
 
-            File directory = new File("./resources/Corpus");
+            File directory = new File("./Corpus");
             corpus = directory.mkdir();
-            File subFolderTerms = new File("./resources/Corpus/Terms");
+            subFolderTerms = new File("./Corpus/Terms");
             subFolder1 = subFolderTerms.mkdir();
-            File subFolderDocs = new File("./resources/Corpus/Docs");
+            File subFolderDocs = new File("./Corpus/Docs");
             subFolder2 = subFolderDocs.mkdir();
             for(char i = 'a' ; i<='z' ; i++){
-                File Tfolder = new File("./resources/Corpus/Terms/" +i);
+                File Tfolder = new File("./Corpus/Terms/" +i);
                 Tfolder.mkdir();
-                File merged = new File(folder.getPath(),i+"_merged.txt");
+                File merged = new File(subFolderTerms.getPath()+"/"+i,i+"_merged.txt");
                 merged.createNewFile();
             }
-            File Sfolder = new File("./resources/Corpus/Terms/special");
+            File Sfolder = new File("./Corpus/Terms/special");
             Sfolder.mkdir();
-            File merged = new File(folder.getPath(),"special"+"_merged.txt");
+            File merged = new File(subFolderTerms.getPath()+"/special","special"+"_merged.txt");
             merged.createNewFile();
 
         }
@@ -67,7 +69,6 @@ public class main {
             throw new IOException("cannot create directory for indexer corpus");
         }
 
-        long startTime = System.currentTimeMillis();
 
         if (folder.isDirectory()) {
             File[] listOfSubFolders = folder.listFiles();
@@ -78,16 +79,28 @@ public class main {
                     executor.execute(new Thread(read));
                     //t.start();
                     //read.run();
+
                 }
+
             }
             executor.shutdown();
             while (!executor.isTerminated()) {
             }
-            long endTime = System.currentTimeMillis();
-            long totalTime = endTime - startTime;
-            System.out.print(totalTime + " , ");
+
         }
-        scanner.close();
+
+        executor= Executors.newFixedThreadPool(5);
+        for (File file : subFolderTerms.listFiles()) {
+            if (file.isDirectory()) {
+                executor.execute(new Thread(new Merge(file.listFiles())));
+            }
+        }
+
+        executor.shutdown();
+        while (!executor.isTerminated()) {
+        }
+
+
         //Indexer index = new Indexer(true);
     }
 }

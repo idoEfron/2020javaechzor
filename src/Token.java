@@ -5,6 +5,8 @@ public class Token {
     private int length;
     private String docId;
     private boolean inTitle;
+    private String file;
+
 
     @Override
     public boolean equals(Object o) {
@@ -35,11 +37,12 @@ public class Token {
         return this.str.hashCode();
     }
 
-    public Token(String str, String docId, boolean inTitle) {
+    public Token(String str, String docId, boolean inTitle,String fileName) {
         this.str = str;
         this.length = str.length();
         this.docId = docId;
         this.inTitle = inTitle;
+        file = fileName;
     }
 
     public String getDocId() {
@@ -56,5 +59,9 @@ public class Token {
 
     public int getLength() {
         return length;
+    }
+
+    public String getFile() {
+        return file;
     }
 }

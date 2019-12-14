@@ -14,7 +14,7 @@ public class Indexer {
     File directory;
     File subFolderTerms;
     File subFolderDocs;
-    Mutex mutex;
+    static Mutex mutex;
     int fileNum;
 
 
@@ -23,12 +23,12 @@ public class Indexer {
         docDictionary = new HashMap<>();
 
         if(!stem){
-            subFolderTerms = new File("./resources/Corpus/Terms");
-            subFolderDocs= new File("./resources/Corpus/Docs");
+            subFolderTerms = new File("./Corpus/Terms");
+            subFolderDocs= new File("./Corpus/Docs");
         }
         else{
-            subFolderTerms = new File("./resources/StemmedCorpus/Terms");
-            subFolderDocs= new File("./resources/StemmedCorpus/Docs");
+            subFolderTerms = new File("./StemmedCorpus/Terms");
+            subFolderDocs= new File("./StemmedCorpus/Docs");
         }
 
 
@@ -38,12 +38,12 @@ public class Indexer {
     }
 
     public boolean addBlock(Parser p) throws IOException {
+        long startTime = System.currentTimeMillis();
         //mutex.lock();
-        System.out.println("indexing...");
+        //System.out.println("indexing...");
         //Map<String, Map<String, Set>> addedLines = new HashMap<>();
         boolean createdFile;
         File file = null;
-        long startTime = System.currentTimeMillis();
         File currentFile=null;
         FileWriter filewriter = null;
         BufferedWriter bw =null;
@@ -55,10 +55,12 @@ public class Indexer {
 
         long totalTime=0;
 
+        Map <String ,List<String>> lines = new HashMap<>();
+
         for (Token tkn : tknSet) {
             //System.out.println(countLines(currentFile.getAbsolutePath()));
             if(Character.isLetter(tkn.getStr().charAt(0))){
-                currentFile = new File(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getDocId()+".txt");
+                /*currentFile = new File(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getDocId()+".txt");
                 if(!currentFile.exists()){
                     try{
                         currentFile.createNewFile();
@@ -69,41 +71,68 @@ public class Indexer {
                 }
                 filewriter = new FileWriter(currentFile, true);
                 bw = new BufferedWriter(filewriter);
-                writer = new PrintWriter(bw);
-                termDictionary.put(tkn.getStr(),subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getStr().toLowerCase().charAt(0)+"_merged.txt");
-                writer.print(tkn.getStr() +" : ");
-                Set <Map.Entry<String,Integer>> map = termMap.get(tkn).entrySet();
-                for (Map.Entry me : map){
-                    writer.print(me.getKey()+"-" + me.getValue() +">> ");
+                writer = new PrintWriter(bw);*/
+                if(lines.containsKey(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getFile()+".txt")){
+                    lines.get(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getFile()+".txt").add(tkn.getStr() +" : ");
+                    Set <Map.Entry<String,Integer>> map = termMap.get(tkn).entrySet();
+                    for (Map.Entry me : map){
+                        lines.get(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getFile()+".txt").add(me.getKey()+"-" + me.getValue() +">> ");
+                    }
+                    lines.get(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getDocId()+".txt").add("\n");
+
                 }
-                writer.println("");
-                writer.flush();
+                else{
+                    lines.put(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getFile()+".txt",new ArrayList<String>());
+                    lines.get(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getFile()+".txt").add(tkn.getStr() +" : ");
+                    Set <Map.Entry<String,Integer>> map = termMap.get(tkn).entrySet();
+                    for (Map.Entry me : map){
+                        lines.get(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getFile()+".txt").add(me.getKey()+"-" + me.getValue() +">> ");
+                    }
+                    lines.get(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getDocId()+".txt").add("\n");
+                }
+
             }
             else{
-                currentFile = new File(subFolderTerms.getPath()+"/"+"special/"+tkn.getDocId() +".txt");
+                /*currentFile = new File(subFolderTerms.getPath()+"/"+"special/"+tkn.getDocId() +".txt");
                 if(!currentFile.exists()){
                     currentFile.createNewFile();
                 }
                 termDictionary.put(tkn.getStr(),subFolderTerms.getPath()+"/"+"special/"+"special_merged.txt");
                 filewriter = new FileWriter(currentFile, true);
                 bw = new BufferedWriter(filewriter);
-                writer = new PrintWriter(bw);
-                writer.print(tkn.getStr() +" : ");
-                Set <Map.Entry<String,Integer>> map = termMap.get(tkn).entrySet();
-                for (Map.Entry me : map){
-                    writer.print(me.getKey()+"-" + me.getValue() +">> ");
+                writer = new PrintWriter(bw);*/
+                if(lines.containsKey(subFolderTerms.getPath()+"/"+"special/"+tkn.getFile()+".txt")){
+                    lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getFile()+".txt").add(tkn.getStr() +" : ");
+                    Set <Map.Entry<String,Integer>> map = termMap.get(tkn).entrySet();
+                    for (Map.Entry me : map){
+                        lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getFile()+".txt").add(me.getKey()+"-" + me.getValue() +">> ");
+                    }
+                    lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getDocId()+".txt").add("\n");
                 }
-                writer.println("");
-                writer.flush();
+                else{
+                    lines.put(subFolderTerms.getPath()+"/"+"special/"+tkn.getFile()+".txt",new ArrayList<String>());
+                    lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getFile()+".txt").add(tkn.getStr() +" : ");
+                    Set <Map.Entry<String,Integer>> map = termMap.get(tkn).entrySet();
+                    for (Map.Entry me : map){
+                        lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getFile()+".txt").add(me.getKey()+"-" + me.getValue() +">> ");
+                    }
+                    lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getDocId()+".txt").add("\n");
+                }
+            }
+            if(!termDictionary.containsKey(tkn.getStr())){
+                termDictionary.put(tkn.getStr(),subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getStr().toLowerCase().charAt(0)+"_merged.txt");
             }
         }
-        writer.close();
-        bw.close();
-        filewriter.close();
+        //writer.close();
+        //bw.close();
+        //filewriter.close();
+        for (String str:lines.keySet()){
+            writeRaw(lines.get(str),str);
+        }
 
-        long endTime = System.currentTimeMillis();
+        /*long endTime = System.currentTimeMillis();
         totalTime = endTime - startTime;
-        System.out.print("page indexed in: " + totalTime + " , ");
+        System.out.print("page indexed in: " + totalTime + " , ");*/
 
         for (String docID : p.getWordCounter().keySet()) {
             file = new File(subFolderDocs.getPath() + "/" + docID + ".txt");
@@ -122,11 +151,18 @@ public class Indexer {
             writer.print(p.getMaxTf().get(docID) + "," + p.getWordCounter().get(docID) + ">>");
             writer.close();
         }
-
+        mutex.lock();
+        //merge(subFolderTerms.listFiles());
+        mutex.unlock();
         //mutex.unlock();
 
-        return false;
+        long endTime = System.currentTimeMillis();
+        totalTime = endTime - startTime;
+        System.out.println("finished with file in:" +totalTime);
+
+        return true;
     }
+
     //https://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java
 
     public int countLines(String filename) throws IOException {
@@ -200,10 +236,11 @@ public class Indexer {
     }
 
     //https://stackoverflow.com/questions/1062113/fastest-way-to-write-huge-data-in-text-file-java
-    private static void writeRaw(List<String> records,String docID) throws IOException {
-        File file = File.createTempFile(docID, ".txt");
-            FileWriter writer = new FileWriter(file);
-            write(records, writer);
+    private static void writeRaw(List<String> records,String filePath) throws IOException {
+        File file = new File( filePath );
+        file.createNewFile();
+        FileWriter writer = new FileWriter(file);
+        write(records, writer);
     }
 
     private static void write(List<String> records, Writer writer) throws IOException {

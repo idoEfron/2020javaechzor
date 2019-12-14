@@ -50,7 +50,7 @@ public class ReadFile implements  Runnable{
             counter = counter + splits.length - 1;//delete
         }
         try {
-            Parser p = new Parser(true);
+            Parser p = new Parser(true,this);
             p.parseDocs(splits,index);
         } catch (ParseException e) {
             e.printStackTrace();
@@ -59,4 +59,13 @@ public class ReadFile implements  Runnable{
         }
 
     }
+
+    public File getSubFolder() {
+        return subFolder;
+    }
+
+    public void setSubFolder(File subFolder) {
+        this.subFolder = subFolder;
+    }
+
 }
