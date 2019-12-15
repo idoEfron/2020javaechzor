@@ -5,9 +5,6 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.tartarus.snowball.ext.porterStemmer;
-
-
 public class main {
 
     public static void main(String[] args) throws IOException, ParseException {
@@ -92,9 +89,11 @@ public class main {
         executor= Executors.newFixedThreadPool(5);
         for (File file : subFolderTerms.listFiles()) {
             if (file.isDirectory()) {
-                executor.execute(new Thread(new Merge(file.listFiles())));
+                Merge merge = new Merge(file.listFiles());
+                executor.execute(new Thread(merge));
             }
         }
+
 
         executor.shutdown();
         while (!executor.isTerminated()) {

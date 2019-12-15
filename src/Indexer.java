@@ -1,4 +1,3 @@
-import javafx.util.Pair;
 import sun.awt.Mutex;
 
 import javax.annotation.processing.FilerException;
@@ -9,19 +8,16 @@ import java.util.*;
 
 public class Indexer {
 
-    Map<String, String> termDictionary;
-    Map<String, String> docDictionary;
-    File directory;
-    File subFolderTerms;
-    File subFolderDocs;
-    static Mutex mutex;
-    int fileNum;
+    private static Map<String, String> termDictionary = new TreeMap<>();
+    private static Map<String, String> docDictionary = new TreeMap<>();
+    private File directory;
+    private File subFolderTerms;
+    private File subFolderDocs;
+    private static Mutex mutex = new Mutex();
+    private int fileNum;
 
 
     public Indexer(boolean stem) throws IOException {
-        termDictionary = new HashMap<>();
-        docDictionary = new HashMap<>();
-
         if(!stem){
             subFolderTerms = new File("./Corpus/Terms");
             subFolderDocs= new File("./Corpus/Docs");
@@ -33,15 +29,10 @@ public class Indexer {
 
 
         fileNum = 0;
-        mutex = new Mutex();
 
     }
 
     public boolean addBlock(Parser p) throws IOException {
-        long startTime = System.currentTimeMillis();
-        //mutex.lock();
-        //System.out.println("indexing...");
-        //Map<String, Map<String, Set>> addedLines = new HashMap<>();
         boolean createdFile;
         File file = null;
         File currentFile=null;
@@ -78,7 +69,7 @@ public class Indexer {
                     for (Map.Entry me : map){
                         lines.get(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getFile()+".txt").add(me.getKey()+"-" + me.getValue() +">> ");
                     }
-                    lines.get(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getDocId()+".txt").add("\n");
+                    lines.get(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getFile()+".txt").add("\n");
 
                 }
                 else{
@@ -88,7 +79,7 @@ public class Indexer {
                     for (Map.Entry me : map){
                         lines.get(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getFile()+".txt").add(me.getKey()+"-" + me.getValue() +">> ");
                     }
-                    lines.get(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getDocId()+".txt").add("\n");
+                    lines.get(subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getFile()+".txt").add("\n");
                 }
 
             }
@@ -107,7 +98,7 @@ public class Indexer {
                     for (Map.Entry me : map){
                         lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getFile()+".txt").add(me.getKey()+"-" + me.getValue() +">> ");
                     }
-                    lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getDocId()+".txt").add("\n");
+                    lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getFile()+".txt").add("\n");
                 }
                 else{
                     lines.put(subFolderTerms.getPath()+"/"+"special/"+tkn.getFile()+".txt",new ArrayList<String>());
@@ -116,23 +107,18 @@ public class Indexer {
                     for (Map.Entry me : map){
                         lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getFile()+".txt").add(me.getKey()+"-" + me.getValue() +">> ");
                     }
-                    lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getDocId()+".txt").add("\n");
+                    lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getFile()+".txt").add("\n");
                 }
             }
+            mutex.lock();
             if(!termDictionary.containsKey(tkn.getStr())){
                 termDictionary.put(tkn.getStr(),subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getStr().toLowerCase().charAt(0)+"_merged.txt");
             }
+            mutex.unlock();
         }
-        //writer.close();
-        //bw.close();
-        //filewriter.close();
         for (String str:lines.keySet()){
             writeRaw(lines.get(str),str);
         }
-
-        /*long endTime = System.currentTimeMillis();
-        totalTime = endTime - startTime;
-        System.out.print("page indexed in: " + totalTime + " , ");*/
 
         for (String docID : p.getWordCounter().keySet()) {
             file = new File(subFolderDocs.getPath() + "/" + docID + ".txt");
@@ -142,7 +128,9 @@ public class Indexer {
                     throw new FilerException("cannot create file for indexer corpus" + docID);
                 }
 
+                mutex.lock();
                 docDictionary.put(docID, file.getPath());
+                mutex.unlock();
             }
             filewriter = new FileWriter(file, true);
             bw = new BufferedWriter(filewriter);
@@ -151,14 +139,6 @@ public class Indexer {
             writer.print(p.getMaxTf().get(docID) + "," + p.getWordCounter().get(docID) + ">>");
             writer.close();
         }
-        mutex.lock();
-        //merge(subFolderTerms.listFiles());
-        mutex.unlock();
-        //mutex.unlock();
-
-        long endTime = System.currentTimeMillis();
-        totalTime = endTime - startTime;
-        System.out.println("finished with file in:" +totalTime);
 
         return true;
     }

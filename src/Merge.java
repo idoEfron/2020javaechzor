@@ -37,6 +37,16 @@ public class Merge implements Runnable {
         if(mergedText!=null && mergedText.size()>0){
             mergedText.addAll(Files.readAllLines(merged.toPath()));
             Collections.sort(mergedText);
+            for (int i=mergedText.size()-1;i>=0;i--){
+                String term = mergedText.get(i).substring(0,mergedText.get(i).indexOf(':'));
+                if(i>0){
+                    if(term.equals(mergedText.get(i-1).substring(0,mergedText.get(i-1).indexOf(':')))){
+                        String suffix = mergedText.remove(i).substring(mergedText.get(i-1).indexOf(": ")+2);
+                        mergedText.set(i-1,mergedText.get(i-1)+suffix);
+                    }
+                    //i=i-1;
+                }
+            }
             writeRaw(mergedText,merged.getPath());
         }
     }

@@ -23,7 +23,7 @@ public class Parser {
     private Map<String, Integer> maxTf;
     private Map<String, Integer> wordCounter;
     private Set<String> termsInDoc;
-    ReadFile rf;
+    private ReadFile rf;
 
 
     public Parser(boolean stem,ReadFile readFile) throws IOException, ParseException {

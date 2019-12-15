@@ -1,21 +1,20 @@
 
 
-import java.io.*;/////
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 
 public class ReadFile implements  Runnable{
     protected ArrayList<String> allFile;
     private File subFolder = null;
     private String[] splits;
-    Indexer index;
-    boolean stem;
+    private Indexer index;
+    private boolean stem;
 
     public ReadFile(File subFolder,Indexer i,boolean stemming) throws IOException {
         allFile = new ArrayList<>();
