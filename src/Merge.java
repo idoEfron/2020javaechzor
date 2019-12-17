@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class Merge implements Runnable {
@@ -36,18 +37,38 @@ public class Merge implements Runnable {
         }
         if(mergedText!=null && mergedText.size()>0){
             mergedText.addAll(Files.readAllLines(merged.toPath()));
-            Collections.sort(mergedText);
+            Collections.sort(mergedText,String.CASE_INSENSITIVE_ORDER);
             for (int i=mergedText.size()-1;i>=0;i--){
                 String term = mergedText.get(i).substring(0,mergedText.get(i).indexOf(':'));
-                if(i>0){
-                    if(term.equals(mergedText.get(i-1).substring(0,mergedText.get(i-1).indexOf(':')))){
-                        String suffix = mergedText.remove(i).substring(mergedText.get(i-1).indexOf(": ")+2);
-                        mergedText.set(i-1,mergedText.get(i-1)+suffix);
+                if(Character.isLowerCase(term.charAt(0))){
+                    if(i>0){
+                        if(Character.isUpperCase(mergedText.get(i-1).charAt(0))){
+                            if(term.toLowerCase().equals(mergedText.get(i-1).substring(0,mergedText.get(i-1).indexOf(':')).toLowerCase())){
+                                String suffix = mergedText.get(i-1).substring(mergedText.get(i-1).indexOf(": ")+2);
+                                mergedText.set(i,mergedText.get(i)+suffix);
+                                mergedText.remove(i-1);
+                            }
+                        }
+                        else{
+                            if(term.toLowerCase().equals(mergedText.get(i-1).substring(0,mergedText.get(i-1).indexOf(':')).toLowerCase())){
+                                String suffix = mergedText.remove(i).substring(mergedText.get(i-1).indexOf(": ")+2);
+                                mergedText.set(i-1,mergedText.get(i-1)+suffix);
+                            }
+                        }
                     }
-                    //i=i-1;
                 }
+                else{
+                    if(i>0){
+                        if(term.toLowerCase().equals(mergedText.get(i-1).substring(0,mergedText.get(i-1).indexOf(':')).toLowerCase())){
+                            String suffix = mergedText.remove(i).substring(mergedText.get(i-1).indexOf(": ")+2);
+                            mergedText.set(i-1,mergedText.get(i-1)+suffix);
+                        }
+                    }
+                }
+
             }
             writeRaw(mergedText,merged.getPath());
+            mergedText.clear();
         }
     }
 

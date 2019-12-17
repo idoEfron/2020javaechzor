@@ -7,17 +7,18 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 public class ReadFile implements  Runnable{
-    protected ArrayList<String> allFile;
-    private File subFolder = null;
+    //protected ArrayList<String> allFile;
+    private List<File> subFolder;
     private String[] splits;
     private Indexer index;
     private boolean stem;
 
-    public ReadFile(File subFolder,Indexer i,boolean stemming) throws IOException {
-        allFile = new ArrayList<>();
+    public ReadFile(List<File> subFolder,Indexer i,boolean stemming) throws IOException {
+        //allFile = new ArrayList<>();
         this.subFolder = subFolder;
         index=i;
         stem = stemming;
@@ -27,43 +28,48 @@ public class ReadFile implements  Runnable{
         Scanner file3 = null;
         int counter = 0;//delete
         File[] files1 = null;
-        files1 = subFolder.listFiles();
-        for (File file2 : files1) {
-            String TxtPaths = file2.getPath();
-            try {
-                file3 = new Scanner(file2);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            finally {
-                file3.close();
-            }
-            String text = null;
-            try {
-                text = new String(Files.readAllBytes(Paths.get(TxtPaths)), StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            splits = text.split("</DOC>");
-            allFile.addAll(Arrays.asList(splits));//
-            counter = counter + splits.length - 1;//delete
+        String text = "";
+        for(File file: subFolder){
+            files1 = file.listFiles();
+            for (File file2 : files1) {
+                String TxtPaths = file2.getPath();
+                try {
+                    file3 = new Scanner(file2);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                finally {
+                    file3.close();
+                }
+                try {
+                    text =text+ new String(Files.readAllBytes(Paths.get(TxtPaths)), StandardCharsets.UTF_8);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                splits = text.split("</DOC>");
+                //allFile.addAll(Arrays.asList(splits));//
+                counter = counter + splits.length - 1;//delete
+             }
         }
         try {
-            Parser p = new Parser(true,this);
-            p.parseDocs(splits,index);
+            Parser p = new Parser(true,this,index);
+            p.parseDocs(splits);
         } catch (ParseException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        //allFile.clear();
 
     }
 
-    public File getSubFolder() {
+    public List<File> getSubFolder() {
         return subFolder;
     }
 
-    public void setSubFolder(File subFolder) {
+    public void setSubFolder(List<File> subFolder) {
         this.subFolder = subFolder;
     }
 

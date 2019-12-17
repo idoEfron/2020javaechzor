@@ -1,23 +1,28 @@
-import sun.awt.Mutex;
 
 import javax.annotation.processing.FilerException;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 
 public class Indexer {
 
-    private static Map<String, String> termDictionary = new TreeMap<>();
-    private static Map<String, String> docDictionary = new TreeMap<>();
+    private TreeMap<String, String> termDictionary = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+    private HashMap<String, String> docDictionary;
     private File directory;
     private File subFolderTerms;
     private File subFolderDocs;
-    private static Mutex mutex = new Mutex();
-    private int fileNum;
+    private static Semaphore mutex = new Semaphore(1);
+    private static int fileNum =0;
+    private static int folderNum=0;
 
 
     public Indexer(boolean stem) throws IOException {
+
+        docDictionary = new HashMap<>();
+
         if(!stem){
             subFolderTerms = new File("./Corpus/Terms");
             subFolderDocs= new File("./Corpus/Docs");
@@ -27,12 +32,9 @@ public class Indexer {
             subFolderDocs= new File("./StemmedCorpus/Docs");
         }
 
-
-        fileNum = 0;
-
     }
 
-    public boolean addBlock(Parser p) throws IOException {
+    public boolean addBlock(Parser p) throws IOException, InterruptedException {
         boolean createdFile;
         File file = null;
         File currentFile=null;
@@ -110,15 +112,19 @@ public class Indexer {
                     lines.get(subFolderTerms.getPath()+"/"+"special/"+tkn.getFile()+".txt").add("\n");
                 }
             }
-            mutex.lock();
+            mutex.acquire();
             if(!termDictionary.containsKey(tkn.getStr())){
                 termDictionary.put(tkn.getStr(),subFolderTerms.getPath()+"/"+tkn.getStr().toLowerCase().charAt(0)+"/"+tkn.getStr().toLowerCase().charAt(0)+"_merged.txt");
             }
-            mutex.unlock();
+            mutex.release();
         }
         for (String str:lines.keySet()){
             writeRaw(lines.get(str),str);
         }
+
+        lines.clear();
+        termMap.clear();
+        tknSet.clear();
 
         for (String docID : p.getWordCounter().keySet()) {
             file = new File(subFolderDocs.getPath() + "/" + docID + ".txt");
@@ -127,10 +133,7 @@ public class Indexer {
                 if (!createdFile) {
                     throw new FilerException("cannot create file for indexer corpus" + docID);
                 }
-
-                mutex.lock();
                 docDictionary.put(docID, file.getPath());
-                mutex.unlock();
             }
             filewriter = new FileWriter(file, true);
             bw = new BufferedWriter(filewriter);
@@ -139,6 +142,23 @@ public class Indexer {
             writer.print(p.getMaxTf().get(docID) + "," + p.getWordCounter().get(docID) + ">>");
             writer.close();
         }
+
+        //ArrayList<String> termDic = new ArrayList<>();
+        ArrayList<String> docDic = new ArrayList<>();
+        for(Map.Entry<String,String> me: docDictionary.entrySet()){
+            docDic.add(me.getKey() +" : "+me.getValue()+"\n");
+        }
+        /*for(Map.Entry<String,String> me: termDictionary.entrySet()){
+            termDic.add(me.getKey() +" : "+me.getValue()+"\n");
+        }*/
+
+        mutex.acquire();
+        writeRaw(docDic,(subFolderDocs.getPath()+"/docDictionary/"+folderNum+".txt"));
+        //writeRaw(termDic,(subFolderTerms.getPath()+"/termDictionary/"+fileNum+".txt"));
+        //fileNum++;
+        folderNum++;
+        mutex.release();
+        docDic.clear();
 
         return true;
     }
@@ -229,6 +249,11 @@ public class Indexer {
         }
         writer.flush();
         writer.close();
+    }
+
+
+    public TreeMap<String, String> getTermDictionary() {
+        return termDictionary;
     }
 
 }
